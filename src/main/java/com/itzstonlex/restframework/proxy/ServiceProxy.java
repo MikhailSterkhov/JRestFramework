@@ -90,6 +90,8 @@ public class ServiceProxy implements InvocationHandler {
             fullLink += makeLinkSignature(method, args);
         }
 
+        // todo - 13.09.2022 - Make URL request
+
         return new RestResponse(200, fullLink, "", restRequest.method());
     }
 }
