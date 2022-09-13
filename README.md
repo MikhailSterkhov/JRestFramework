@@ -82,19 +82,19 @@ Tests REST-service structure:
 ```java
 TestRestService testRestService = restStorage.get(TestRestService.class);
 
-// Get an user-datas
+// Get an user-datas.
 Userdata meelad = testRestService.getUserdata("meelad");
 RestResponse meeladNative = testRestService.getUserdataResponse("meelad");
 
-// Print tests in console
+// Print tests in console.
 System.out.println(meelad);
 System.out.println(meeladNative);
 
-// Add new a userdata
+// Add new user-data.
 RestResponse postResponse = testRestService.addUserdata(
         RestRequestMessage.asJson(new Userdata("itzstonlex", 18, 5)));
 
-if (postResponse.getResponseCode == 200) {
+if (postResponse.getResponseCode() == 200) {
     // Success POST request execution logic.
 }
 ```
