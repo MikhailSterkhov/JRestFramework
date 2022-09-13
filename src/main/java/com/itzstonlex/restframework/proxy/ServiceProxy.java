@@ -7,9 +7,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.experimental.FieldDefaults;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
@@ -95,11 +95,15 @@ public class ServiceProxy implements InvocationHandler {
         Parameter[] parameters = method.getParameters();
 
         for (int index = 0; index < parameters.length; index++) {
+            Parameter parameter = parameters[index];
+
+            if (parameter.getType().isAssignableFrom(RestRequestMessage.class)) {
+                continue;
+            }
+
             if (index > 0) {
                 stringBuilder.append("&");
             }
-
-            Parameter parameter = parameters[index];
 
             String paramName = parameter.isAnnotationPresent(RestParam.class)
                     ? parameter.getDeclaredAnnotation(RestParam.class).value()
@@ -165,9 +169,18 @@ public class ServiceProxy implements InvocationHandler {
                     urlConnection.setConnectTimeout(5000);
                     urlConnection.setReadTimeout(restRequest.timeout());
 
-                    if (args != null && args.length == 1 && args[0].getClass().isAssignableFrom(RestRequestContext.class)) {
-                        // todo - request output logic with RestRequestContext
-                        return makeResponse(urlConnection);
+                    if (args != null && args.length == 1 && args[0].getClass().isAssignableFrom(RestRequestMessage.class)) {
+
+                        RestRequestMessage message = (RestRequestMessage) args[0];
+                        urlConnection.setDoOutput(true);
+
+                        try (OutputStream outputStream = urlConnection.getOutputStream()) {
+
+                            outputStream.write(message.getMessage().getBytes(StandardCharsets.UTF_8));
+                            outputStream.flush();
+
+                            return makeResponse(urlConnection);
+                        }
                     }
                     else {
                         return makeResponse(urlConnection);
