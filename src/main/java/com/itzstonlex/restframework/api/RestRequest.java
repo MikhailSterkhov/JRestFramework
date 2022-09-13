@@ -13,5 +13,7 @@ public @interface RestRequest {
 
     String context();
 
+    int timeout() default 2000;
+
     boolean useSignature() default true;
 }

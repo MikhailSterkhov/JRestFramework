@@ -4,8 +4,6 @@ import com.itzstonlex.restframework.RestFrameworkBootstrap;
 import com.itzstonlex.restframework.RestFrameworkStorage;
 import com.itzstonlex.restframework.api.RestResponse;
 
-import java.util.UUID;
-
 public class TestStarter {
 
     public static void main(String[] args) {
@@ -13,12 +11,12 @@ public class TestStarter {
 
         TestRestService testRestService = restStorage.get(TestRestService.class);
 
-        RestResponse deleteResponse = testRestService.deleteUser(1);
+        RestResponse entriesResponse = testRestService.getEntries();
 
-        System.out.println(deleteResponse.getStatusCode());
-        System.out.println(deleteResponse.getUrl());
-
-        System.out.println(testRestService.getUsers().getUrl());
-        System.out.println(testRestService.addUser(UUID.randomUUID(), "itzstonlex").getUrl());
+        System.out.println(entriesResponse.getResponseCode());
+        System.out.println(entriesResponse.getResponseMessage());
+        System.out.println(entriesResponse.getUrl());
+        System.out.println(entriesResponse.getMethod());
+        System.out.println(entriesResponse.getBody());
     }
 }
