@@ -40,6 +40,7 @@ A simple example of REST-service structure:
 
 ```java
 import com.itzstonlex.restframework.api.*;
+import lombok.NonNull;
 
 import java.util.UUID;
 
@@ -51,8 +52,7 @@ public interface TestRestService {
 
     @RestRequest(method = "POST", context = "/users")
     RestResponse addUser(
-            @RestParam("uuid") UUID uuid,
-            @RestParam("name") String username
+            @NonNull RestRequestMessage postMessage
     );
 
     @RestRequest(method = "DELETE", context = "/users")
@@ -71,11 +71,11 @@ TestRestService testRestService = restStorage.get(TestRestService.class);
 
 RestResponse deleteResponse = testRestService.deleteUser(1);
 
-System.out.println(deleteResponse.getStatusCode());
+System.out.println(deleteResponse.getResponseCode());
 System.out.println(deleteResponse.getUrl());
 
 System.out.println(testRestService.getUsers().getUrl());
-System.out.println(testRestService.addUser(UUID.randomUUID(), "itzstonlex").getUrl());
+System.out.println(testRestService.addUser(RestRequestMessage.asJson(new UserDao(UUID.randomUUID(), "itzstonlex"))).getBody());
 ```
 Console Output Example:
 ```shell
