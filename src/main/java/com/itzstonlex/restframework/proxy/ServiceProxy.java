@@ -57,9 +57,9 @@ public class ServiceProxy implements InvocationHandler {
     }
 
     private void validateMethodAccess(Method method) {
-        if (!method.getReturnType().isAssignableFrom(RestResponse.class)) {
-            throw new RuntimeException(method + " return type is not assignable from RestResponse");
-        }
+        // if (!method.getReturnType().isAssignableFrom(RestResponse.class)) {
+        //     throw new RuntimeException(method + " return type is not assignable from RestResponse");
+        // }
 
         if (!method.isAnnotationPresent(RestRequest.class)) {
             throw new RuntimeException(method + " is not annotation @RestRequest present");
@@ -146,8 +146,8 @@ public class ServiceProxy implements InvocationHandler {
             return Arrays.asList(restFlagsArray).contains(flag);
         }
 
-        public CompletableFuture<RestResponse> execute(Object[] args) {
-            Supplier<RestResponse> responseSupplier = () -> {
+        public CompletableFuture<Object> execute(Object[] args) {
+            Supplier<Object> responseSupplier = () -> {
                 HttpURLConnection urlConnection = null;
 
                 String fullLink = restStructure.url() + restRequest.context();
@@ -179,11 +179,11 @@ public class ServiceProxy implements InvocationHandler {
                             outputStream.write(message.getMessage().getBytes(StandardCharsets.UTF_8));
                             outputStream.flush();
 
-                            return makeResponse(urlConnection);
+                            return makeMethodResponse(urlConnection);
                         }
                     }
                     else {
-                        return makeResponse(urlConnection);
+                        return makeMethodResponse(urlConnection);
                     }
                 }
                 catch (IOException e) {
@@ -222,6 +222,18 @@ public class ServiceProxy implements InvocationHandler {
                         urlConnection.getRequestMethod()
                 );
             }
+        }
+
+        public Object makeMethodResponse(HttpURLConnection urlConnection) {
+            RestResponse response = makeResponse(urlConnection);
+
+            Class<?> returnType = method.getReturnType();
+
+            if (!returnType.isAssignableFrom(RestResponse.class)) {
+                return response.getBodyAsJsonObject(returnType);
+            }
+
+            return response;
         }
     }
 

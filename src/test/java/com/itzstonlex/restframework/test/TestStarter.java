@@ -2,7 +2,6 @@ package com.itzstonlex.restframework.test;
 
 import com.itzstonlex.restframework.RestFrameworkBootstrap;
 import com.itzstonlex.restframework.RestFrameworkStorage;
-import com.itzstonlex.restframework.api.RestRequestMessage;
 import com.itzstonlex.restframework.api.RestResponse;
 
 public class TestStarter {
@@ -12,14 +11,10 @@ public class TestStarter {
 
         TestRestService testRestService = restStorage.get(TestRestService.class);
 
-        RestResponse entriesResponse = testRestService.postEntries(
-                RestRequestMessage.asText("example text message")
-        );
+        Userdata meelad = testRestService.getUserdata("meelad");
+        RestResponse meeladNative = testRestService.getUserdataResponse("meelad");
 
-        System.out.println(entriesResponse.getResponseCode());
-        System.out.println(entriesResponse.getResponseMessage());
-        System.out.println(entriesResponse.getUrl());
-        System.out.println(entriesResponse.getMethod());
-        System.out.println(entriesResponse.getBody());
+        System.out.println(meelad);
+        System.out.println(meeladNative);
     }
 }

@@ -42,47 +42,68 @@ A simple example of REST-service structure:
 import com.itzstonlex.restframework.api.*;
 import lombok.NonNull;
 
-import java.util.UUID;
-
 @RestService
-@RestStructure(url = "localhost:8080", struct = RestStructure.EnumStructure.JSON)
+@RestStructure(url = "https://api.agify.io", struct = RestStructure.EnumStructure.JSON)
 @RestFlag(RestFlag.Type.ALLOW_SIGNATURE)
 @RestFlag(RestFlag.Type.ASYNC_REQUESTS)
 public interface TestRestService {
 
-    @RestRequest(method = "POST", context = "/users")
-    RestResponse addUser(
-            @NonNull RestRequestMessage postMessage
-    );
+    /**
+     * This function automatically converts the received JSON into
+     * the object specified in the return object type of this function (Userdata)
+     *
+     * @param name - Name of user.
+     */
+    @RestRequest(method = "GET", context = "/")
+    Userdata getUserdata(@RestParam("name") String name);
 
-    @RestRequest(method = "DELETE", context = "/users")
-    RestResponse deleteUser(
-            @RestParam("id") long id
-    );
+    /**
+     * And this function returns a direct HTTP result after
+     * executing the request with all the native data
+     *
+     * @param name - Name of user.
+     */
+    @RestRequest(method = "GET", context = "/", timeout = 1000)
+    RestResponse getUserdataResponse(@RestParam("name") String name);
 
-    @RestRequest(method = "GET", context = "/users", useSignature = false)
-    RestResponse getUsers();
+    /**
+     * The request body can be created using the 
+     * {@link com.itzstonlex.restframework.api.RestRequestMessage} factory, 
+     * as shown in this example
+     */
+    @RestRequest(method = "POST", context = "/add", useSignature = false)
+    RestResponse addUserdata(@NonNull RestRequestMessage postMessage);
 }
 ```
 
+_P.S.: And also no one forbids not using the method signature at all_
+
 Tests REST-service structure:
 ```java
+RestFrameworkStorage restStorage = RestFrameworkBootstrap.runServices(TestStarter.class);
+
 TestRestService testRestService = restStorage.get(TestRestService.class);
 
-RestResponse deleteResponse = testRestService.deleteUser(1);
+// Get an user-datas
+Userdata meelad = testRestService.getUserdata("meelad");
+RestResponse meeladNative = testRestService.getUserdataResponse("meelad");
 
-System.out.println(deleteResponse.getResponseCode());
-System.out.println(deleteResponse.getUrl());
+// Print tests in console
+System.out.println(meelad);
+System.out.println(meeladNative);
 
-System.out.println(testRestService.getUsers().getUrl());
-System.out.println(testRestService.addUser(RestRequestMessage.asJson(new UserDao(UUID.randomUUID(), "itzstonlex"))).getBody());
+// Add new a userdata
+RestResponse postResponse = testRestService.addUserdata(
+        RestRequestMessage.asJson(new Userdata("itzstonlex", 18, 5)));
+
+if (postResponse.getResponseCode == 200) {
+    // Success POST request execution logic.
+}
 ```
 Console Output Example:
 ```shell
-200
-localhost:8080/users?id=1
-localhost:8080/users
-localhost:8080/users?uuid=5783a104-cc4c-4304-a117-a16ff73a19ce&name=itzstonlex
+Userdata(name=meelad, age=29, count=21)
+RestResponse(responseCode=200, responseMessage=OK, url=https://api.agify.io/?name=meelad, body={"name":"meelad","age":29,"count":21}, method=GET)
 ```
 
 ---

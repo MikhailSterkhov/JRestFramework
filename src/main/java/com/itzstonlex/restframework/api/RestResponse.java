@@ -1,5 +1,6 @@
 package com.itzstonlex.restframework.api;
 
+import com.google.gson.Gson;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -14,6 +15,8 @@ import java.nio.charset.Charset;
 @RequiredArgsConstructor
 @FieldDefaults(makeFinal = true)
 public class RestResponse {
+
+    private static final Gson GSON = new Gson();
 
     private int responseCode;
 
@@ -30,5 +33,9 @@ public class RestResponse {
 
     public byte[] getBodyAsByteArray(Charset charset) {
         return body.getBytes(charset);
+    }
+
+    public <T> T getBodyAsJsonObject(Class<T> type) {
+        return GSON.fromJson(body, type);
     }
 }
