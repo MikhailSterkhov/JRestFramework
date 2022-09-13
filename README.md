@@ -80,8 +80,6 @@ _P.S.: And also no one forbids not using the method signature at all_
 
 Tests REST-service structure:
 ```java
-RestFrameworkStorage restStorage = RestFrameworkBootstrap.runServices(TestStarter.class);
-
 TestRestService testRestService = restStorage.get(TestRestService.class);
 
 // Get an user-datas
