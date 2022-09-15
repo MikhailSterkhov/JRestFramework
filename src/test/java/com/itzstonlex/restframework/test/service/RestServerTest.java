@@ -1,9 +1,6 @@
 package com.itzstonlex.restframework.test.service;
 
-import com.itzstonlex.restframework.api.RestFlag;
-import com.itzstonlex.restframework.api.RestParam;
-import com.itzstonlex.restframework.api.RestServer;
-import com.itzstonlex.restframework.api.RestService;
+import com.itzstonlex.restframework.api.*;
 import com.itzstonlex.restframework.api.method.Get;
 import com.itzstonlex.restframework.api.method.Post;
 import com.itzstonlex.restframework.api.request.RestRequestMessage;
@@ -13,6 +10,7 @@ import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -24,6 +22,13 @@ import java.util.stream.Collectors;
 public class RestServerTest {
 
     private List<Userdata> userdataList;
+
+    @RestExceptionHandler
+    public void onExceptionThrow(IOException exception) {
+        System.out.println("HANDLE EXCEPTION!");
+
+        exception.printStackTrace();
+    }
 
     @Get(context = "/users")
     public RestResponse onUsersGet() {

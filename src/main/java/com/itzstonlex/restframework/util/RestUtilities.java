@@ -165,7 +165,8 @@ public class RestUtilities {
     @SneakyThrows
     public void handleException(Object source, Throwable throwable, Map<Class<? extends Throwable>, List<Method>> exceptionHandlersMap) {
         if (exceptionHandlersMap.isEmpty()) {
-            throw throwable;
+            throwable.printStackTrace();
+            return;
         }
 
         Set<Class<? extends Throwable>> exceptionClasses = exceptionHandlersMap.keySet();
