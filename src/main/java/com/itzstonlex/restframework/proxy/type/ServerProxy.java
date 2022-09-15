@@ -234,7 +234,7 @@ public class ServerProxy implements MethodHandler {
             try {
                 sendResponse(exchange, createMethodArgumentsList(requestContext, exchange).toArray());
             }
-            catch (Exception exception) {
+            catch (Throwable exception) {
                 RestUtilities.handleException(proxyInstance, exception, exceptionHandlersMap);
             }
         }

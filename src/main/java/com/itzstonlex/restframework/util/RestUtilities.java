@@ -179,6 +179,7 @@ public class RestUtilities {
             return;
         }
 
+        boolean founded = false;
         Set<Class<? extends Throwable>> exceptionClasses = exceptionHandlersMap.keySet();
 
         for (Class<? extends Throwable> exceptionType : exceptionClasses) {
@@ -186,6 +187,19 @@ public class RestUtilities {
             if (exceptionType.isAssignableFrom(throwable.getClass())) {
 
                 for (Method exceptionHandler : exceptionHandlersMap.get(exceptionType)) {
+                    exceptionHandler.invoke(source, throwable);
+
+                    founded = true;
+                }
+            }
+        }
+
+        if (!founded) {
+            List<Method> methods = exceptionHandlersMap.get(throwable.getClass());
+
+            if (methods != null) {
+
+                for (Method exceptionHandler : methods) {
                     exceptionHandler.invoke(source, throwable);
                 }
             }
