@@ -18,18 +18,20 @@ public class TestStarter {
         restStorage.initServer(RestServerTest.class, new ArrayList<>());
 
         // await for server bind.
-        Thread.sleep(3000);
+        Thread.sleep(1500);
 
         // test client connection.
         RestClientTest restClient = restStorage.get(RestClientTest.class);
 
-        restClient.addUserdata(RestRequestMessage.asJsonObject(new Userdata("itzstonlex", 18, 3)));
+        restClient.addUserdata(
+                RestRequestMessage.asJsonObject(new Userdata("itzstonlex", 18, 3)));
 
         Userdata itzstonlex = restClient.getUserdata("itzstonlex");
         RestResponse itzstonlexResponse = restClient.getUserdataResponse("itzstonlex");
 
         System.out.println("[Test] " + itzstonlex);
         System.out.println("[Test] " + itzstonlexResponse);
+        System.out.println("[Test] " + restClient.getCachedUserdataList(2));
     }
 
 }

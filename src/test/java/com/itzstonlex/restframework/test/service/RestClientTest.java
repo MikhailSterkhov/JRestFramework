@@ -9,6 +9,7 @@ import com.itzstonlex.restframework.test.Userdata;
 import lombok.NonNull;
 
 import java.io.IOException;
+import java.util.List;
 
 @RestService
 @RestClient(url = "http://localhost:8082/api")
@@ -25,6 +26,9 @@ public interface RestClientTest {
         System.out.println("EXCEPTION HANDLER!");
         exception.printStackTrace();
     }
+
+    @Get(context = "/users")
+    List<Userdata> getCachedUserdataList(@RestParam("limit") long limit);
 
     /**
      * This function automatically converts the received JSON into
