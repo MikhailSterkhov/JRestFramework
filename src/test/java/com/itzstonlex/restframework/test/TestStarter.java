@@ -11,14 +11,10 @@ import java.util.ArrayList;
 
 public class TestStarter {
 
-    public static void main(String[] args)
-    throws Throwable {
+    public static void main(String[] args) {
 
         RestFrameworkStorage restStorage = RestFrameworkBootstrap.runServices(TestStarter.class);
         restStorage.initServer(RestServerTest.class, new ArrayList<>());
-
-        // await for server bind.
-        Thread.sleep(1500);
 
         // test client connection.
         RestClientTest restClient = restStorage.get(RestClientTest.class);

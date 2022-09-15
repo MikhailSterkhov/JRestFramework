@@ -17,23 +17,6 @@ and initialization flexibility to run your code or project.
 
 ## HOW TO USE?
 
-A simple example of initializing your<br>
-project for the requirements of this library:
-
-```java
-import com.itzstonlex.restframework.RestFrameworkBootstrap;
-import com.itzstonlex.restframework.RestFrameworkStorage;
-
-public class Bootstrap {
-
-    public static void main(String[] args) {
-        RestFrameworkStorage restStorage = RestFrameworkBootstrap.runServices(Bootstrap.class);
-    }
-}
-```
-
----
-
 ### REST CLIENT
 
 A simple example of REST-client structure:
@@ -99,34 +82,6 @@ public interface TestRestClient {
 
 _P.S.: And also no one forbids not using the method signature at all_
 
-Tests REST-client structure:
-```java
-restStorage.initServer(RestServerTest.class, new ArrayList<>());
-
-// await for server bind.
-Thread.sleep(1500);
-
-// test client connection.
-RestClientTest restClient = restStorage.get(RestClientTest.class);
-
-System.out.println("[Test] " + restClient.addUserdata(
-        RestRequestMessage.asJsonObject(new Userdata("itzstonlex", 18, 3)))
-);
-
-Userdata itzstonlex = restClient.getUserdata("itzstonlex");
-RestResponse itzstonlexResponse = restClient.getUserdataAsResponse("itzstonlex");
-
-System.out.println("[Test] " + itzstonlex);
-System.out.println("[Test] " + itzstonlexResponse);
-System.out.println("[Test] " + restClient.getCachedUserdataList(2));
-```
-Console Output Example:
-```shell
-[Test] RestResponse(responseCode=200, responseMessage=OK, url=http://localhost:8082/api/adduser, body={"message":"Successfully added"}, method=POST)
-[Test] Userdata(name=itzstonlex, age=18, count=3)
-[Test] RestResponse(responseCode=200, responseMessage=OK, url=http://localhost:8082/api/user?name=itzstonlex, body={"name":"itzstonlex","age":18,"count":3}, method=GET)
-[Test] [{name=itzstonlex, age=18.0, count=3.0}]
-```
 ---
 
 ### REST SERVER
@@ -181,6 +136,55 @@ public class RestServerTest {
         return RestResponse.createOnlyBody(200, message);
     }
 }
+```
+
+---
+
+### TESTING REST-SERVICES
+
+A simple example of initializing your<br>
+project for the requirements of this library:
+
+```java
+import com.itzstonlex.restframework.RestFrameworkBootstrap;
+import com.itzstonlex.restframework.RestFrameworkStorage;
+
+public class Bootstrap {
+
+    public static void main(String[] args) {
+        RestFrameworkStorage rest = RestFrameworkBootstrap.runServices(Bootstrap.class);
+    }
+}
+```
+
+Example REST services tests:
+```java
+// Initial REST-server
+rest.initServer(RestServerTest.class, new ArrayList<>());
+
+// Get initialized REST-client
+RestClientTest restClient = rest.get(RestClientTest.class);
+
+// Add user & print response,
+System.out.println("[Test] " + restClient.addUserdata(
+        RestRequestMessage.asJsonObject(new Userdata("itzstonlex", 18, 3)))
+);
+
+// Get response-data at variables.
+Userdata itzstonlex = restClient.getUserdata("itzstonlex");
+RestResponse itzstonlexResponse = restClient.getUserdataAsResponse("itzstonlex");
+
+// Print responses.
+System.out.println("[Test] " + itzstonlex);
+System.out.println("[Test] " + itzstonlexResponse);
+System.out.println("[Test] " + restClient.getCachedUserdataList(2));
+```
+Console Output Example:
+```shell
+[Test] RestResponse(responseCode=200, responseMessage=OK, url=http://localhost:8082/api/adduser, body={"message":"Successfully added"}, method=POST)
+[Test] Userdata(name=itzstonlex, age=18, count=3)
+[Test] RestResponse(responseCode=200, responseMessage=OK, url=http://localhost:8082/api/user?name=itzstonlex, body={"name":"itzstonlex","age":18,"count":3}, method=GET)
+[Test] [{name=itzstonlex, age=18.0, count=3.0}]
 ```
 ---
 
