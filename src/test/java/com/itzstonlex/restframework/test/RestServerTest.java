@@ -1,4 +1,4 @@
-package com.itzstonlex.restframework.test.service;
+package com.itzstonlex.restframework.test;
 
 import com.itzstonlex.restframework.api.*;
 import com.itzstonlex.restframework.api.method.Get;
@@ -19,18 +19,18 @@ import static com.itzstonlex.restframework.api.response.RestResponse.SUCCESS;
 
 @RestService
 @RestServer(host = "localhost", port = 8082, defaultContext = "/api")
-@RestFlag(RestFlag.Type.ASYNC_REQUESTS)
 @RequiredArgsConstructor
 @FieldDefaults(makeFinal = true)
 public class RestServerTest {
 
+    private static final String AUTH_TOKEN = "Auth-Token";
+
+    // initial by @RequiredArgsConstructor
     private List<Userdata> userdataList;
 
     @RestExceptionHandler
-    public void onExceptionThrow(Exception exception) {
-        System.out.println("HANDLE EXCEPTION!");
-
-        exception.printStackTrace();
+    public void onExceptionThrow(IllegalArgumentException exception) {
+        System.out.println("Wrong authentication token!");
     }
 
     @Get(context = "/users")
@@ -59,18 +59,17 @@ public class RestServerTest {
 
     @Post(context = "/adduser")
     public RestResponse onUserAdd(@RestParam RestRequestContext context) {
-        if (!context.getFirstHeader("Auth-Token").equals("testToken")) {
-            throw new IllegalArgumentException("Auth-Token");
+
+        if (!context.getFirstHeader(AUTH_TOKEN).equals("TestToken123")) {
+            throw new IllegalArgumentException(AUTH_TOKEN);
         }
 
         RestBody message = context.getBody();
 
         Userdata newUserdata = message.getBodyAsJsonObject(Userdata.class);
-
         userdataList.add(newUserdata);
 
         message.setValue("Successfully added");
         return RestResponse.createOnlyBody(SUCCESS, message);
     }
-
 }

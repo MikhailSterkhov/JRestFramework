@@ -1,4 +1,4 @@
-package com.itzstonlex.restframework.test.service;
+package com.itzstonlex.restframework.test;
 
 import com.itzstonlex.restframework.api.*;
 import com.itzstonlex.restframework.api.method.Get;
@@ -30,8 +30,15 @@ public interface RestClientTest {
      * @param name - Name of user.
      */
     @Get(context = "/user")
+    @RestHeader(name = "Content-Type", value = "application/json")
     Userdata getUserdata(@RestParam("name") String name);
 
+    /**
+     * This function automatically converts the received JSON into
+     * the object specified in the return object type of this function (List)
+     *
+     * @param limit - Limit of users list size
+     */
     @Get(context = "/users")
     List<Userdata> getCachedUserdataList(@RestParam("limit") long limit);
 
@@ -46,11 +53,11 @@ public interface RestClientTest {
 
     /**
      * The requestMethod body can be created using the
-     * {@link RestBody}
+     * {@link com.itzstonlex.restframework.api.RestBody}
      * factory, as shown in this example
      */
-    @RestHeader(name = "Content-Type", value = "application/json", operate = RestHeader.Operation.ADD)
-    @RestHeader(name = "Auth-Token", value = "testToken")
     @Post(context = "/adduser", useSignature = false)
-    RestResponse addUserdata(@RestParam RestBody postMessage);
+    @RestHeader(name = "Content-Type", value = "application/json")
+    @RestHeader(name = "Auth-Token", value = "TestToken123", operate = RestHeader.Operation.ADD)
+    RestResponse addUserdata(@RestParam RestBody body);
 }

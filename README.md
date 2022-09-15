@@ -32,7 +32,7 @@ import lombok.NonNull;
 @RestService
 @RestClient(url = "http://localhost:8082/api")
 @RestFlag(RestFlag.Type.ASYNC_REQUESTS)
-public interface TestRestClient {
+public interface RestClientTest {
 
     /**
      * Handling of exceptions.
@@ -48,8 +48,8 @@ public interface TestRestClient {
      *
      * @param name - Name of user.
      */
-    @RestHeader(name = "Content-Type", value = "application/json")
     @Get(context = "/user")
+    @RestHeader(name = "Content-Type", value = "application/json")
     Userdata getUserdata(@RestParam("name") String name);
 
     /**
@@ -75,9 +75,10 @@ public interface TestRestClient {
      * {@link com.itzstonlex.restframework.api.RestBody}
      * factory, as shown in this example
      */
-    @RestHeader(name = "Auth-Token", value = "TestToken123")
     @Post(context = "/adduser", useSignature = false)
-    RestResponse addUserdata(@NonNull RestBody body);
+    @RestHeader(name = "Content-Type", value = "application/json")
+    @RestHeader(name = "Auth-Token", value = "TestToken123", operate = RestHeader.Operation.ADD)
+    RestResponse addUserdata(@RestParam RestBody body);
 }
 ```
 
@@ -114,7 +115,8 @@ import static com.itzstonlex.restframework.api.response.RestResponse.SUCCESS;
 public class RestServerTest {
 
     private static final String AUTH_TOKEN = "Auth-Token";
-
+    
+    // initial by @RequiredArgsConstructor
     private List<Userdata> userdataList;
 
     @RestExceptionHandler
@@ -153,14 +155,14 @@ public class RestServerTest {
 
     @Post(context = "/adduser")
     public RestResponse onUserAdd(@RestParam RestRequestContext context) {
-        if (context.getFirstHeader(AUTH_TOKEN).equals("TestToken123")) {
+        
+        if (!context.getFirstHeader(AUTH_TOKEN).equals("TestToken123")) {
             throw new IllegalArgumentException(AUTH_TOKEN);
         }
 
         RestBody message = context.getBody();
 
         Userdata newUserdata = message.getBodyAsJsonObject(Userdata.class);
-
         userdataList.add(newUserdata);
 
         message.setValue("Successfully added");
@@ -196,10 +198,9 @@ rest.initServer(RestServerTest.class, new ArrayList<>());
 // Get initialized REST-client
 RestClientTest restClient = rest.get(RestClientTest.class);
 
-// Add user & print response,
-System.out.println("[Test] " + restClient.addUserdata(
-        RestBody.asJsonObject(new Userdata("itzstonlex", 18, 3)))
-);
+// Add user & print response.
+RestBody adduserBody = RestBody.asJsonObject(new Userdata("itzstonlex", 18, 3)); 
+System.out.println("[Test] " + restClient.addUserdata(adduserBody));
 
 // Get response-data at variables.
 Userdata itzstonlex = restClient.getUserdata("itzstonlex");
