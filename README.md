@@ -17,10 +17,6 @@ and initialization flexibility to run your code or project.
 
 ## HOW TO USE?
 
-**FULL DOCUMENTATION LINK: [[Wiki Page]](https://github.com/ItzStonlex/JExecutionLib/wiki)**
-
----
-
 A simple example of initializing your<br>
 project for the requirements of this library:
 
