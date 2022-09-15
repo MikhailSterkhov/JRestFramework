@@ -3,14 +3,11 @@ package com.itzstonlex.restframework.test;
 import com.itzstonlex.restframework.api.*;
 import com.itzstonlex.restframework.api.method.Get;
 import com.itzstonlex.restframework.api.method.Post;
-import com.itzstonlex.restframework.api.RestBody;
 import com.itzstonlex.restframework.api.request.RestRequestContext;
 import com.itzstonlex.restframework.api.response.RestResponse;
-import com.itzstonlex.restframework.test.Userdata;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.stream.Collectors;
 

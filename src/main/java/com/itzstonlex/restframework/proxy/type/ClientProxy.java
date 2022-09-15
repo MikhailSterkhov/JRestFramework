@@ -1,12 +1,8 @@
 package com.itzstonlex.restframework.proxy.type;
 
-import com.itzstonlex.restframework.api.RestClient;
-import com.itzstonlex.restframework.api.RestExceptionHandler;
-import com.itzstonlex.restframework.api.RestFlag;
-import com.itzstonlex.restframework.api.RestHeader;
+import com.itzstonlex.restframework.api.*;
 import com.itzstonlex.restframework.api.method.RequestMethod;
 import com.itzstonlex.restframework.api.request.RestRequest;
-import com.itzstonlex.restframework.api.RestBody;
 import com.itzstonlex.restframework.api.response.RestResponse;
 import com.itzstonlex.restframework.util.RestUtilities;
 import lombok.AccessLevel;
@@ -22,7 +18,9 @@ import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.message.BasicHeader;
 import org.apache.http.message.BasicHttpRequest;
 
-import java.io.*;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;

@@ -2,7 +2,10 @@ package com.itzstonlex.restframework;
 
 import com.itzstonlex.restframework.proxy.ProjectScanner;
 import com.itzstonlex.restframework.proxy.RestServiceProxyManager;
-import lombok.*;
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.NonFinal;
 
