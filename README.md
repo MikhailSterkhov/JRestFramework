@@ -77,7 +77,7 @@ public interface TestRestClient {
      */
     @RestHeader(name = "Auth-Token", value = "TestToken123")
     @Post(context = "/adduser", useSignature = false)
-    RestResponse addUserdata(@NonNull RestBody postMessage);
+    RestResponse addUserdata(@NonNull RestBody body);
 }
 ```
 
@@ -198,7 +198,7 @@ RestClientTest restClient = rest.get(RestClientTest.class);
 
 // Add user & print response,
 System.out.println("[Test] " + restClient.addUserdata(
-        RestRequestMessage.asJsonObject(new Userdata("itzstonlex", 18, 3)))
+        RestBody.asJsonObject(new Userdata("itzstonlex", 18, 3)))
 );
 
 // Get response-data at variables.
