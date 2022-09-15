@@ -51,10 +51,22 @@ import com.itzstonlex.restframework.api.response.RestResponse;
 import lombok.NonNull;
 
 @RestService
-@RestClient(url = "https://api.agify.io")
+@RestClient(url = "http://localhost:8082/api")
 @RestFlag(RestFlag.Type.DISALLOW_SIGNATURE)
 @RestFlag(RestFlag.Type.ASYNC_REQUESTS)
 public interface TestRestClient {
+
+    /**
+     * Handling of exceptions.
+     *
+     * @param exception - Thrown exception.
+     */
+    @RestExceptionHandler
+    default void handle(IOException exception) {
+        System.out.println("EXCEPTION HANDLER!");
+
+        exception.printStackTrace();
+    }
 
     /**
      * This function automatically converts the received JSON into
@@ -62,24 +74,27 @@ public interface TestRestClient {
      *
      * @param name - Name of user.
      */
-    @Get(context = "/")
+    @Get(context = "/user", timeout = 1000)
     Userdata getUserdata(@RestParam("name") String name);
+
+    @Get(context = "/users")
+    List<Userdata> getCachedUserdataList(@RestParam("limit") long limit);
 
     /**
      * And this function returns a direct HTTP result after
-     * executing the requestMethod with all the native data
+     * executing the request with all the native data
      *
      * @param name - Name of user.
      */
-    @Get(context = "/", timeout = 1000)
+    @Get(context = "/user")
     RestResponse getUserdataResponse(@RestParam("name") String name);
 
     /**
-     * The requestMethod body can be created using the 
-     * {@link com.itzstonlex.restframework.api.request.RestRequestMessage} factory, 
-     * as shown in this example
+     * The requestMethod body can be created using the
+     * {@link com.itzstonlex.restframework.api.request.RestRequestMessage}
+     * factory, as shown in this example
      */
-    @Post(context = "/add", useSignature = false)
+    @Post(context = "/adduser", useSignature = false)
     RestResponse addUserdata(@NonNull RestRequestMessage postMessage);
 }
 ```
@@ -88,28 +103,29 @@ _P.S.: And also no one forbids not using the method signature at all_
 
 Tests REST-client structure:
 ```java
-TestRestClient restClient = restStorage.client(TestRestClient.class);
+restStorage.initServer(RestServerTest.class, new ArrayList<>());
 
-// Get an user-datas.
-Userdata meelad = restClientTest.getUserdata("meelad");
-RestResponse meeladNative = restClientTest.getUserdataResponse("meelad");
+// await for server bind.
+Thread.sleep(1500);
 
-// Print tests in console.
-System.out.println(meelad);
-System.out.println(meeladNative);
+// test client connection.
+RestClientTest restClient = restStorage.get(RestClientTest.class);
 
-// Add new user-data.
-RestResponse postResponse = restClientTest.addUserdata(
-        RestRequestMessage.asJson(new Userdata("itzstonlex", 18, 5)));
+restClient.addUserdata(
+RestRequestMessage.asJsonObject(new Userdata("itzstonlex", 18, 3)));
 
-if (postResponse.getResponseCode() == 200) {
-    // Success POST requestMethod execution logic.
-}
+Userdata itzstonlex = restClient.getUserdata("itzstonlex");
+RestResponse itzstonlexResponse = restClient.getUserdataResponse("itzstonlex");
+
+System.out.println("[Test] " + itzstonlex);
+System.out.println("[Test] " + itzstonlexResponse);
+System.out.println("[Test] " + restClient.getCachedUserdataList(2));
 ```
 Console Output Example:
 ```shell
-Userdata(name=meelad, age=29, count=21)
-RestResponse(responseCode=200, responseMessage=OK, url=https://api.agify.io/?name=meelad, body={"name":"meelad","age":29,"count":21}, method=GET)
+[Test] Userdata(name=itzstonlex, age=18, count=3)
+[Test] RestResponse(responseCode=200, responseMessage=OK, url=http://localhost:8082/api/user?name=itzstonlex, body={"name":"itzstonlex","age":18,"count":3}, method=GET)
+[Test] [{name=itzstonlex, age=18.0, count=3.0}]
 ```
 ---
 
@@ -133,7 +149,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @RestService
-@RestServer(host = "127.0.0.1", port = 8080, bindTimeout = 1000, defaultContext = "/api")
+@RestServer(host = "localhost", port = 8082, bindTimeout = 1000, defaultContext = "/api")
 @RestFlag(RestFlag.Type.ASYNC_REQUESTS)
 @RequiredArgsConstructor
 @FieldDefaults(makeFinal = true)

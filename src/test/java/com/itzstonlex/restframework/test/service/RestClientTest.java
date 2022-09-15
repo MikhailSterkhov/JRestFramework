@@ -24,6 +24,7 @@ public interface RestClientTest {
     @RestExceptionHandler
     default void handle(IOException exception) {
         System.out.println("EXCEPTION HANDLER!");
+
         exception.printStackTrace();
     }
 
