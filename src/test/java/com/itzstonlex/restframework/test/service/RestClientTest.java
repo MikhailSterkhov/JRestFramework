@@ -23,13 +23,10 @@ public interface RestClientTest {
      */
     @RestExceptionHandler
     default void handle(IOException exception) {
-        System.out.println("EXCEPTION HANDLER!");
-
+        System.out.println("IOException handling");
         exception.printStackTrace();
     }
 
-    @RestHeader(name = "User-Agent", value = "itzstonlex")
-    @RestHeader(name = "Content-Type", value = "application/json")
     @Get(context = "/users")
     List<Userdata> getCachedUserdataList(@RestParam("limit") long limit);
 
@@ -41,7 +38,7 @@ public interface RestClientTest {
      */
     @RestHeader(name = "User-Agent", value = "itzstonlex")
     @RestHeader(name = "Content-Type", value = "application/json")
-    @Get(context = "/user", timeout = 1000)
+    @Get(context = "/user")
     Userdata getUserdata(@RestParam("name") String name);
 
     /**
@@ -50,10 +47,9 @@ public interface RestClientTest {
      *
      * @param name - Name of user.
      */
-    @RestHeader(name = "User-Agent", value = "itzstonlex")
     @RestHeader(name = "Content-Type", value = "application/json")
     @Get(context = "/user")
-    RestResponse getUserdataResponse(@RestParam("name") String name);
+    RestResponse getUserdataAsResponse(@RestParam("name") String name);
 
     /**
      * The requestMethod body can be created using the
@@ -61,7 +57,6 @@ public interface RestClientTest {
      * factory, as shown in this example
      */
     @RestHeader(name = "User-Agent", value = "itzstonlex")
-    @RestHeader(name = "Content-Type", value = "application/json")
     @Post(context = "/adduser", useSignature = false)
     RestResponse addUserdata(@NonNull RestRequestMessage postMessage);
 }

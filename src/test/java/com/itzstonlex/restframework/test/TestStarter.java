@@ -28,7 +28,7 @@ public class TestStarter {
         );
 
         Userdata itzstonlex = restClient.getUserdata("itzstonlex");
-        RestResponse itzstonlexResponse = restClient.getUserdataResponse("itzstonlex");
+        RestResponse itzstonlexResponse = restClient.getUserdataAsResponse("itzstonlex");
 
         System.out.println("[Test] " + itzstonlex);
         System.out.println("[Test] " + itzstonlexResponse);
