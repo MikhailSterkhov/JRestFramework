@@ -48,7 +48,6 @@ import lombok.NonNull;
 
 @RestService
 @RestClient(url = "http://localhost:8082/api")
-@RestFlag(RestFlag.Type.DISALLOW_SIGNATURE)
 @RestFlag(RestFlag.Type.ASYNC_REQUESTS)
 public interface TestRestClient {
 
@@ -151,7 +150,6 @@ import java.util.stream.Collectors;
 
 @RestService
 @RestServer(host = "localhost", port = 8082, bindTimeout = 1000, defaultContext = "/api")
-@RestFlag(RestFlag.Type.ASYNC_REQUESTS)
 @RequiredArgsConstructor
 @FieldDefaults(makeFinal = true)
 public class RestServerTest {
