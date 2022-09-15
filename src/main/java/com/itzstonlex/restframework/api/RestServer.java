@@ -21,8 +21,6 @@ public @interface RestServer {
 
     int port();
 
-    int bindTimeout() default 2000;
-
     @Getter
     @RequiredArgsConstructor
     @FieldDefaults(makeFinal = true)

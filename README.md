@@ -104,7 +104,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @RestService
-@RestServer(host = "localhost", port = 8082, bindTimeout = 1000, defaultContext = "/api")
+@RestServer(host = "localhost", port = 8082, defaultContext = "/api")
 @RequiredArgsConstructor
 @FieldDefaults(makeFinal = true)
 public class RestServerTest {
