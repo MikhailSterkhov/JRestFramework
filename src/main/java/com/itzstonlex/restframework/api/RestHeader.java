@@ -7,7 +7,16 @@ import java.lang.annotation.*;
 @Repeatable(MultipleRestHeaders.class)
 public @interface RestHeader {
 
+    Operation operate() default Operation.SET;
+
     String name();
 
     String value();
+
+    enum Operation {
+
+        SET,
+        ADD,
+        REMOVE,
+    }
 }

@@ -5,8 +5,9 @@ import com.itzstonlex.restframework.api.RestFlag;
 import com.itzstonlex.restframework.api.RestParam;
 import com.itzstonlex.restframework.api.RestServer;
 import com.itzstonlex.restframework.api.method.RequestMethod;
+import com.itzstonlex.restframework.api.RestBody;
 import com.itzstonlex.restframework.api.request.RestRequest;
-import com.itzstonlex.restframework.api.request.RestRequestMessage;
+import com.itzstonlex.restframework.api.request.RestRequestContext;
 import com.itzstonlex.restframework.api.response.RestResponse;
 import com.itzstonlex.restframework.util.RestUtilities;
 import com.sun.net.httpserver.HttpExchange;
@@ -21,7 +22,6 @@ import lombok.SneakyThrows;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.NonFinal;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.annotation.Annotation;
@@ -148,7 +148,7 @@ public class ServerProxy implements MethodHandler {
 
             byte[] responseBytes = response.getBodyAsByteArray();
 
-            exchange.sendResponseHeaders(response.getResponseCode(), responseBytes.length);
+            exchange.sendResponseHeaders(response.getStatusCode(), responseBytes.length);
 
             try (OutputStream responseBody = exchange.getResponseBody()) {
 
@@ -182,13 +182,18 @@ public class ServerProxy implements MethodHandler {
 
             for (Parameter parameter : parametersArray) {
 
-                if (parameter.getType().isAssignableFrom(RestRequestMessage.class)) {
+                if (parameter.isAnnotationPresent(RestParam.class)) {
 
-                    RestRequestMessage restRequestMessage = RestRequestMessage.asText(requestBodyMessage);
-                    methodArgumentsList.add(restRequestMessage);
-                    continue;
-                }
-                else if (parameter.isAnnotationPresent(RestParam.class)) {
+                    if (parameter.getType().isAssignableFrom(RestRequestContext.class)) {
+                        RestRequestContext requestContext = RestRequestContext.create(exchange.getRequestMethod(), requestContextPath);
+
+                        requestContext.setBody(RestBody.asText(requestBodyMessage));
+
+                        requestContext.getHeaders().putAll(exchange.getRequestHeaders());
+                        methodArgumentsList.add(requestContext);
+
+                        continue;
+                    }
 
                     if (linkParameters == null) {
                         throw new NullPointerException("URL Parameters is not found!");

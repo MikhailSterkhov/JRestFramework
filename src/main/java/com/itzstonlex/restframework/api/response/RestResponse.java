@@ -17,36 +17,42 @@ public class RestResponse {
 
 // ===================================================== //
 
-    public static RestResponse create(int responseCode) {
-        return new RestResponse(responseCode, null, null, null, null);
+    public static final int INFO = 100;
+    public static final int SUCCESS = 200;
+    public static final int REDIRECT = 300;
+    public static final int CLIENT_ERROR = 400;
+    public static final int SERVER_ERROR = 500;
+
+    public static RestResponse create(int statusCode) {
+        return new RestResponse(statusCode, null, null, null, null);
     }
 
-    public static RestResponse create(int responseCode, String responseMessage) {
-        return new RestResponse(responseCode, responseMessage, null, null, null);
+    public static RestResponse create(int statusCode, String responseMessage) {
+        return new RestResponse(statusCode, responseMessage, null, null, null);
     }
 
-    public static RestResponse create(int responseCode, String responseMessage, String url) {
-        return new RestResponse(responseCode, responseMessage, url, null, null);
+    public static RestResponse create(int statusCode, String responseMessage, String url) {
+        return new RestResponse(statusCode, responseMessage, url, null, null);
     }
 
-    public static RestResponse create(int responseCode, String responseMessage, String url, Object body) {
+    public static RestResponse create(int statusCode, String responseMessage, String url, Object body) {
         String bodyMessage = body instanceof String ? body.toString() : RestUtilities.GSON.toJson(body);
-        return new RestResponse(responseCode, responseMessage, url, bodyMessage, null);
+        return new RestResponse(statusCode, responseMessage, url, bodyMessage, null);
     }
 
-    public static RestResponse create(int responseCode, String responseMessage, String url, Object body, String method) {
+    public static RestResponse create(int statusCode, String responseMessage, String url, Object body, String method) {
         String bodyMessage = body instanceof String ? body.toString() : RestUtilities.GSON.toJson(body);
-        return new RestResponse(responseCode, responseMessage, url, bodyMessage, method);
+        return new RestResponse(statusCode, responseMessage, url, bodyMessage, method);
     }
 
-    public static RestResponse createOnlyBody(int responseCode, Object body) {
-        return create(responseCode, null, null, body, null);
+    public static RestResponse createOnlyBody(int statusCode, Object body) {
+        return create(statusCode, null, null, body, null);
     }
 
 // ===================================================== //
 
-    private int responseCode;
-    private String responseMessage;
+    private int statusCode;
+    private String statusMessage;
 
     @NonFinal
     private String url;

@@ -3,10 +3,9 @@ package com.itzstonlex.restframework.test.service;
 import com.itzstonlex.restframework.api.*;
 import com.itzstonlex.restframework.api.method.Get;
 import com.itzstonlex.restframework.api.method.Post;
-import com.itzstonlex.restframework.api.request.RestRequestMessage;
+import com.itzstonlex.restframework.api.RestBody;
 import com.itzstonlex.restframework.api.response.RestResponse;
 import com.itzstonlex.restframework.test.Userdata;
-import lombok.NonNull;
 
 import java.io.IOException;
 import java.util.List;
@@ -22,13 +21,7 @@ public interface RestClientTest {
      * @param exception - Thrown exception.
      */
     @RestExceptionHandler
-    default void handle(IOException exception) {
-        System.out.println("IOException handling");
-        exception.printStackTrace();
-    }
-
-    @Get(context = "/users")
-    List<Userdata> getCachedUserdataList(@RestParam("limit") long limit);
+    void handle(IOException exception);
 
     /**
      * This function automatically converts the received JSON into
@@ -36,10 +29,11 @@ public interface RestClientTest {
      *
      * @param name - Name of user.
      */
-    @RestHeader(name = "User-Agent", value = "itzstonlex")
-    @RestHeader(name = "Content-Type", value = "application/json")
     @Get(context = "/user")
     Userdata getUserdata(@RestParam("name") String name);
+
+    @Get(context = "/users")
+    List<Userdata> getCachedUserdataList(@RestParam("limit") long limit);
 
     /**
      * And this function returns a direct HTTP result after
@@ -47,16 +41,16 @@ public interface RestClientTest {
      *
      * @param name - Name of user.
      */
-    @RestHeader(name = "Content-Type", value = "application/json")
     @Get(context = "/user")
     RestResponse getUserdataAsResponse(@RestParam("name") String name);
 
     /**
      * The requestMethod body can be created using the
-     * {@link com.itzstonlex.restframework.api.request.RestRequestMessage}
+     * {@link RestBody}
      * factory, as shown in this example
      */
-    @RestHeader(name = "User-Agent", value = "itzstonlex")
+    @RestHeader(name = "Content-Type", value = "application/json", operate = RestHeader.Operation.ADD)
+    @RestHeader(name = "Auth-Token", value = "testToken")
     @Post(context = "/adduser", useSignature = false)
-    RestResponse addUserdata(@NonNull RestRequestMessage postMessage);
+    RestResponse addUserdata(@RestParam RestBody postMessage);
 }

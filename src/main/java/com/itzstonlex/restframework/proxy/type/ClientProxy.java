@@ -6,19 +6,20 @@ import com.itzstonlex.restframework.api.RestFlag;
 import com.itzstonlex.restframework.api.RestHeader;
 import com.itzstonlex.restframework.api.method.RequestMethod;
 import com.itzstonlex.restframework.api.request.RestRequest;
-import com.itzstonlex.restframework.api.request.RestRequestMessage;
+import com.itzstonlex.restframework.api.RestBody;
 import com.itzstonlex.restframework.api.response.RestResponse;
 import com.itzstonlex.restframework.util.RestUtilities;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.apache.http.Header;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.RequestBuilder;
-import org.apache.http.conn.EofSensorInputStream;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.message.BasicHeader;
 import org.apache.http.message.BasicHttpRequest;
 
 import java.io.*;
@@ -100,13 +101,11 @@ public class ClientProxy implements InvocationHandler {
     }
 
     @Override
-    public Object invoke(Object proxy, Method method, Object[] args)
-    throws Exception {
-
+    public Object invoke(Object proxy, Method method, Object[] args) {
         if (method.isAnnotationPresent(RestExceptionHandler.class)) {
-            RestUtilities.handleException(proxy, (Throwable) args[0], exceptionHandlersMap);
 
-            return Void.TYPE.newInstance();
+            ((Throwable) args[0]).printStackTrace();
+            return null;
         }
 
         ExecutableMethod executable = executionsMap.get(method.toString());
@@ -124,6 +123,7 @@ public class ClientProxy implements InvocationHandler {
     private class ExecutableMethod {
 
         private RestClient restClient;
+
         private RestFlag.Type[] restFlagsArray;
         private RestHeader[] restHeaders;
 
@@ -151,18 +151,33 @@ public class ClientProxy implements InvocationHandler {
                     RequestBuilder requestBuilder = RequestBuilder.copy(new BasicHttpRequest(request.getMethod(), fullLink));
 
                     for (RestHeader restHeader : restHeaders) {
-                        requestBuilder.addHeader(restHeader.name(), restHeader.value());
+                        Header apacheHeader = new BasicHeader(restHeader.name(), restHeader.value());
+
+                        switch (restHeader.operate()) {
+                            case ADD: {
+                                requestBuilder.addHeader(apacheHeader);
+                                break;
+                            }
+                            case SET: {
+                                requestBuilder.setHeader(apacheHeader);
+                                break;
+                            }
+                            case REMOVE: {
+                                requestBuilder.removeHeader(apacheHeader);
+                                break;
+                            }
+                        }
                     }
 
-                    if (args != null && args.length == 1 && args[0].getClass().isAssignableFrom(RestRequestMessage.class)) {
-                        RestRequestMessage message = (RestRequestMessage) args[0];
+                    if (args != null && args.length == 1 && args[0].getClass().isAssignableFrom(RestBody.class)) {
+                        RestBody message = (RestBody) args[0];
 
                         if (message.isNull()) {
                             throw new NullPointerException(method + " - request message is null");
                         }
 
                         try {
-                            requestBuilder.setEntity(new StringEntity(message.getMessage()));
+                            requestBuilder.setEntity(new StringEntity(message.getValue()));
                         }
                         catch (UnsupportedEncodingException exception) {
                             RestUtilities.handleException(proxy, exception, exceptionHandlersMap);

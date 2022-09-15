@@ -3,8 +3,8 @@ package com.itzstonlex.restframework.util;
 import com.google.gson.Gson;
 import com.itzstonlex.restframework.api.*;
 import com.itzstonlex.restframework.api.method.*;
+import com.itzstonlex.restframework.api.RestBody;
 import com.itzstonlex.restframework.api.request.RestRequest;
-import com.itzstonlex.restframework.api.request.RestRequestMessage;
 import com.itzstonlex.restframework.proxy.type.ClientProxy;
 import com.itzstonlex.restframework.proxy.type.ServerProxy;
 import lombok.NonNull;
@@ -153,7 +153,7 @@ public class RestUtilities {
         for (int index = 0; index < parameters.length; index++) {
             Parameter parameter = parameters[index];
 
-            if (parameter.getType().isAssignableFrom(RestRequestMessage.class)) {
+            if (parameter.getType().isAssignableFrom(RestBody.class)) {
                 continue;
             }
 

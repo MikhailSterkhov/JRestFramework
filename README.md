@@ -25,7 +25,7 @@ A simple example of REST-client structure:
 import com.itzstonlex.restframework.api.*;
 import com.itzstonlex.restframework.api.method.Get;
 import com.itzstonlex.restframework.api.method.Post;
-import com.itzstonlex.restframework.api.request.RestRequestMessage;
+import com.itzstonlex.restframework.api.RestBody;
 import com.itzstonlex.restframework.api.response.RestResponse;
 import lombok.NonNull;
 
@@ -44,7 +44,7 @@ public interface TestRestClient {
         System.out.println("IOException handling");
         exception.printStackTrace();
     }
-    
+
     @Get(context = "/users")
     List<Userdata> getCachedUserdataList(@RestParam("limit") long limit);
 
@@ -71,12 +71,12 @@ public interface TestRestClient {
 
     /**
      * The requestMethod body can be created using the
-     * {@link com.itzstonlex.restframework.api.request.RestRequestMessage}
+     * {@link com.itzstonlex.restframework.api.RestBody}
      * factory, as shown in this example
      */
     @RestHeader(name = "User-Agent", value = "itzstonlex")
     @Post(context = "/adduser", useSignature = false)
-    RestResponse addUserdata(@NonNull RestRequestMessage postMessage);
+    RestResponse addUserdata(@NonNull RestBody postMessage);
 }
 ```
 
@@ -92,16 +92,19 @@ A simple example of REST-server structure:
 import com.itzstonlex.restframework.api.*;
 import com.itzstonlex.restframework.api.method.Get;
 import com.itzstonlex.restframework.api.method.Post;
-import com.itzstonlex.restframework.api.request.RestRequestMessage;
+import com.itzstonlex.restframework.api.RestBody;
+import com.itzstonlex.restframework.api.request.RestRequestContext;
 import com.itzstonlex.restframework.api.response.RestResponse;
 import com.itzstonlex.restframework.test.Userdata;
-import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 
 import java.io.IOException;
 import java.util.List;
 import java.util.stream.Collectors;
+
+import static com.itzstonlex.restframework.api.response.RestResponse.CLIENT_ERROR;
+import static com.itzstonlex.restframework.api.response.RestResponse.SUCCESS;
 
 @RestService
 @RestServer(host = "localhost", port = 8082, defaultContext = "/api")
@@ -118,22 +121,38 @@ public class RestServerTest {
 
     @Get(context = "/users")
     public RestResponse onUsersGet() {
-        return RestResponse.createOnlyBody(200, userdataList);
+        return RestResponse.createOnlyBody(SUCCESS, userdataList);
     }
 
     @Get(context = "/users")
     public RestResponse onLimitedUsersGet(@RestParam("limit") long limit) {
-        return RestResponse.createOnlyBody(200, userdataList.stream().limit(limit).collect(Collectors.toList()));
+        return RestResponse.createOnlyBody(SUCCESS, userdataList.stream().limit(limit).collect(Collectors.toList()));
+    }
+
+    @Get(context = "/user")
+    public RestResponse onUserGet(@RestParam("name") String name) {
+        Userdata userdata = userdataList.stream()
+                .filter(cached -> cached.getName().equalsIgnoreCase(name))
+                .findFirst()
+                .orElse(null);
+
+        if (userdata == null) {
+            return RestResponse.createOnlyBody(CLIENT_ERROR + 4, RestBody.asText("Userdata is not found"));
+        }
+
+        return RestResponse.createOnlyBody(SUCCESS, userdata);
     }
 
     @Post(context = "/adduser")
-    public RestResponse onUserAdd(@NonNull RestRequestMessage message) {
-        Userdata newUserdata = message.getMessageAsJsonObject(Userdata.class);
+    public RestResponse onUserAdd(@RestParam RestRequestContext context) {
+        RestBody message = context.getBody();
+
+        Userdata newUserdata = message.getBodyAsJsonObject(Userdata.class);
 
         userdataList.add(newUserdata);
 
-        message.setMessage("Successfully added");
-        return RestResponse.createOnlyBody(200, message);
+        message.setValue("Successfully added");
+        return RestResponse.createOnlyBody(SUCCESS, message);
     }
 }
 ```
