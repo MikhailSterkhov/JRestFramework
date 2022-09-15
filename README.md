@@ -52,6 +52,12 @@ public interface TestRestClient {
     @Get(context = "/user")
     Userdata getUserdata(@RestParam("name") String name);
 
+    /**
+     * This function automatically converts the received JSON into
+     * the object specified in the return object type of this function (List)
+     *
+     * @param limit - Limit of users list size
+     */
     @Get(context = "/users")
     List<Userdata> getCachedUserdataList(@RestParam("limit") long limit);
 
