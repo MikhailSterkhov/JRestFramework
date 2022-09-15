@@ -119,7 +119,7 @@ public class RestServerTest {
     // initial by @RequiredArgsConstructor
     private List<Userdata> userdataList;
 
-    @Get(context = "/users")
+    @Get(context = "/users", timeout = 200)
     public RestResponse onUsersGet() {
         return RestResponse.createOnlyBody(SUCCESS, userdataList);
     }
@@ -143,7 +143,7 @@ public class RestServerTest {
         return RestResponse.createOnlyBody(SUCCESS, userdata);
     }
 
-    @Post(context = "/adduser")
+    @Post(context = "/adduser", timeout = 250)
     public RestResponse onUserAdd(@RestParam RestRequestContext context) {
         
         if (!context.getFirstHeader(AUTH_TOKEN).equals("TestToken123")) {

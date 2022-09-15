@@ -25,6 +25,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.net.InetSocketAddress;
 import java.util.*;
+import java.util.concurrent.TimeoutException;
 
 @FieldDefaults(makeFinal = true)
 public class ServerProxy implements MethodHandler {
@@ -108,7 +109,7 @@ public class ServerProxy implements MethodHandler {
                 String contextName = restServer.defaultContext() + request.getContext();
 
                 httpServer.createContext(contextName,
-                        new ExchangedMethod(RestUtilities.getRestFlagsTypes(restFlagsArray), request.getMethod(), contextName, method));
+                        new ExchangedMethod(RestUtilities.getRestFlagsTypes(restFlagsArray), request, contextName, method));
             }
 
             httpServer.bind(new InetSocketAddress(restServer.host(), restServer.port()), 10);
@@ -131,7 +132,7 @@ public class ServerProxy implements MethodHandler {
         // todo - apply flags.
         private RestFlag.Type[] restFlagsTypes;
 
-        private String restMethod;
+        private RestRequest request;
         private String restContext;
 
         private Method declaredMethod;
@@ -222,13 +223,21 @@ public class ServerProxy implements MethodHandler {
         public void handle(HttpExchange exchange) {
             String requestContext = exchange.getRequestURI().toString();
 
-            if (!requestContext.split("\\?")[0].endsWith(restContext) || !restMethod.equalsIgnoreCase(exchange.getRequestMethod())) {
+            if (!requestContext.split("\\?")[0].endsWith(restContext) || !request.getMethod().equalsIgnoreCase(exchange.getRequestMethod())) {
                 exchange.close();
                 return;
             }
 
             try {
-                sendResponse(exchange, createMethodArgumentsList(requestContext, exchange).toArray());
+                long startTime = System.currentTimeMillis();
+
+                Object[] invokeArgs = createMethodArgumentsList(requestContext, exchange).toArray();
+
+                if (System.currentTimeMillis() - startTime > request.getTimeout()) {
+                    throw new TimeoutException(declaredMethod.toString());
+                }
+
+                sendResponse(exchange, invokeArgs);
             }
             catch (Throwable exception) {
                 RestUtilities.handleException(proxyInstance, exception, exceptionHandlersMap);
