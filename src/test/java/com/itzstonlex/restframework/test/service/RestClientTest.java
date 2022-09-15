@@ -28,6 +28,8 @@ public interface RestClientTest {
         exception.printStackTrace();
     }
 
+    @RestHeader(name = "User-Agent", value = "itzstonlex")
+    @RestHeader(name = "Content-Type", value = "application/json")
     @Get(context = "/users")
     List<Userdata> getCachedUserdataList(@RestParam("limit") long limit);
 
@@ -37,6 +39,8 @@ public interface RestClientTest {
      *
      * @param name - Name of user.
      */
+    @RestHeader(name = "User-Agent", value = "itzstonlex")
+    @RestHeader(name = "Content-Type", value = "application/json")
     @Get(context = "/user", timeout = 1000)
     Userdata getUserdata(@RestParam("name") String name);
 
@@ -46,6 +50,8 @@ public interface RestClientTest {
      *
      * @param name - Name of user.
      */
+    @RestHeader(name = "User-Agent", value = "itzstonlex")
+    @RestHeader(name = "Content-Type", value = "application/json")
     @Get(context = "/user")
     RestResponse getUserdataResponse(@RestParam("name") String name);
 
@@ -54,6 +60,8 @@ public interface RestClientTest {
      * {@link com.itzstonlex.restframework.api.request.RestRequestMessage}
      * factory, as shown in this example
      */
+    @RestHeader(name = "User-Agent", value = "itzstonlex")
+    @RestHeader(name = "Content-Type", value = "application/json")
     @Post(context = "/adduser", useSignature = false)
     RestResponse addUserdata(@NonNull RestRequestMessage postMessage);
 }

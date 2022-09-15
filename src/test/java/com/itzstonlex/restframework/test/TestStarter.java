@@ -23,8 +23,9 @@ public class TestStarter {
         // test client connection.
         RestClientTest restClient = restStorage.get(RestClientTest.class);
 
-        restClient.addUserdata(
-                RestRequestMessage.asJsonObject(new Userdata("itzstonlex", 18, 3)));
+        System.out.println("[Test] " + restClient.addUserdata(
+                RestRequestMessage.asJsonObject(new Userdata("itzstonlex", 18, 3)))
+        );
 
         Userdata itzstonlex = restClient.getUserdata("itzstonlex");
         RestResponse itzstonlexResponse = restClient.getUserdataResponse("itzstonlex");

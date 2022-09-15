@@ -59,10 +59,14 @@ public interface TestRestClient {
      */
     @RestExceptionHandler
     default void handle(IOException exception) {
-        System.out.println("EXCEPTION HANDLER!");
-
+        System.out.println("IOException handling");
         exception.printStackTrace();
     }
+
+    @RestHeader(name = "User-Agent", value = "itzstonlex")
+    @RestHeader(name = "Content-Type", value = "application/json")
+    @Get(context = "/users")
+    List<Userdata> getCachedUserdataList(@RestParam("limit") long limit);
 
     /**
      * This function automatically converts the received JSON into
@@ -70,11 +74,10 @@ public interface TestRestClient {
      *
      * @param name - Name of user.
      */
+    @RestHeader(name = "User-Agent", value = "itzstonlex")
+    @RestHeader(name = "Content-Type", value = "application/json")
     @Get(context = "/user", timeout = 1000)
     Userdata getUserdata(@RestParam("name") String name);
-
-    @Get(context = "/users")
-    List<Userdata> getCachedUserdataList(@RestParam("limit") long limit);
 
     /**
      * And this function returns a direct HTTP result after
@@ -82,6 +85,8 @@ public interface TestRestClient {
      *
      * @param name - Name of user.
      */
+    @RestHeader(name = "User-Agent", value = "itzstonlex")
+    @RestHeader(name = "Content-Type", value = "application/json")
     @Get(context = "/user")
     RestResponse getUserdataResponse(@RestParam("name") String name);
 
@@ -90,6 +95,8 @@ public interface TestRestClient {
      * {@link com.itzstonlex.restframework.api.request.RestRequestMessage}
      * factory, as shown in this example
      */
+    @RestHeader(name = "User-Agent", value = "itzstonlex")
+    @RestHeader(name = "Content-Type", value = "application/json")
     @Post(context = "/adduser", useSignature = false)
     RestResponse addUserdata(@NonNull RestRequestMessage postMessage);
 }
@@ -107,8 +114,9 @@ Thread.sleep(1500);
 // test client connection.
 RestClientTest restClient = restStorage.get(RestClientTest.class);
 
-restClient.addUserdata(
-RestRequestMessage.asJsonObject(new Userdata("itzstonlex", 18, 3)));
+System.out.println("[Test] " + restClient.addUserdata(
+        RestRequestMessage.asJsonObject(new Userdata("itzstonlex", 18, 3)))
+);
 
 Userdata itzstonlex = restClient.getUserdata("itzstonlex");
 RestResponse itzstonlexResponse = restClient.getUserdataResponse("itzstonlex");
@@ -119,6 +127,7 @@ System.out.println("[Test] " + restClient.getCachedUserdataList(2));
 ```
 Console Output Example:
 ```shell
+[Test] RestResponse(responseCode=200, responseMessage=OK, url=http://localhost:8082/api/adduser, body={"message":"Successfully added"}, method=POST)
 [Test] Userdata(name=itzstonlex, age=18, count=3)
 [Test] RestResponse(responseCode=200, responseMessage=OK, url=http://localhost:8082/api/user?name=itzstonlex, body={"name":"itzstonlex","age":18,"count":3}, method=GET)
 [Test] [{name=itzstonlex, age=18.0, count=3.0}]

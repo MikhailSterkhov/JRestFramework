@@ -2,7 +2,7 @@ package com.itzstonlex.restframework.api;
 
 import java.lang.annotation.*;
 
-@Target(ElementType.TYPE)
+@Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
 @Repeatable(MultipleRestHeaders.class)
 public @interface RestHeader {

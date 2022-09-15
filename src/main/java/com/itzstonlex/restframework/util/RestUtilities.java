@@ -125,13 +125,23 @@ public class RestUtilities {
     }
 
     public RestFlag[] getFlagsAnnotations(Class<?> declaringClass) {
-        Class<MultipleRestFlags> multipleServiceFlagsClass = MultipleRestFlags.class;
+        Class<MultipleRestFlags> annotationType = MultipleRestFlags.class;
 
-        if (!declaringClass.isAnnotationPresent(multipleServiceFlagsClass)) {
+        if (!declaringClass.isAnnotationPresent(annotationType)) {
             return new RestFlag[0];
         }
 
-        return declaringClass.getDeclaredAnnotation(multipleServiceFlagsClass).value();
+        return declaringClass.getDeclaredAnnotation(annotationType).value();
+    }
+
+    public RestHeader[] getHeaders(Method method) {
+        Class<MultipleRestHeaders> annotationType = MultipleRestHeaders.class;
+
+        if (!method.isAnnotationPresent(annotationType)) {
+            return new RestHeader[0];
+        }
+
+        return method.getDeclaredAnnotation(annotationType).value();
     }
 
     public String makeLinkSignature(Method method, Object[] args)

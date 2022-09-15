@@ -3,6 +3,7 @@ package com.itzstonlex.restframework.proxy.type;
 import com.itzstonlex.restframework.api.RestClient;
 import com.itzstonlex.restframework.api.RestExceptionHandler;
 import com.itzstonlex.restframework.api.RestFlag;
+import com.itzstonlex.restframework.api.RestHeader;
 import com.itzstonlex.restframework.api.method.RequestMethod;
 import com.itzstonlex.restframework.api.request.RestRequest;
 import com.itzstonlex.restframework.api.request.RestRequestMessage;
@@ -89,7 +90,12 @@ public class ClientProxy implements InvocationHandler {
             }
 
             executionsMap.put(method.toString(),
-                    new ExecutableMethod(restClient, RestUtilities.getRestFlagsTypes(restFlagsArray), request, method));
+                    new ExecutableMethod(restClient,
+
+                            RestUtilities.getRestFlagsTypes(restFlagsArray),
+                            RestUtilities.getHeaders(method),
+
+                            request, method));
         }
     }
 
@@ -119,6 +125,7 @@ public class ClientProxy implements InvocationHandler {
 
         private RestClient restClient;
         private RestFlag.Type[] restFlagsArray;
+        private RestHeader[] restHeaders;
 
         private RestRequest request;
 
@@ -142,6 +149,10 @@ public class ClientProxy implements InvocationHandler {
 
                 try (CloseableHttpClient httpClient = HttpClientBuilder.create().build()) {
                     RequestBuilder requestBuilder = RequestBuilder.copy(new BasicHttpRequest(request.getMethod(), fullLink));
+
+                    for (RestHeader restHeader : restHeaders) {
+                        requestBuilder.addHeader(restHeader.name(), restHeader.value());
+                    }
 
                     if (args != null && args.length == 1 && args[0].getClass().isAssignableFrom(RestRequestMessage.class)) {
                         RestRequestMessage message = (RestRequestMessage) args[0];
