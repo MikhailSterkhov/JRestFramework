@@ -40,13 +40,7 @@ public interface TestRestClient {
      * @param exception - Thrown exception.
      */
     @RestExceptionHandler
-    default void handle(IOException exception) {
-        System.out.println("IOException handling");
-        exception.printStackTrace();
-    }
-
-    @Get(context = "/users")
-    List<Userdata> getCachedUserdataList(@RestParam("limit") long limit);
+    void handle(IOException exception);
 
     /**
      * This function automatically converts the received JSON into
@@ -54,10 +48,12 @@ public interface TestRestClient {
      *
      * @param name - Name of user.
      */
-    @RestHeader(name = "User-Agent", value = "itzstonlex")
     @RestHeader(name = "Content-Type", value = "application/json")
     @Get(context = "/user")
     Userdata getUserdata(@RestParam("name") String name);
+
+    @Get(context = "/users")
+    List<Userdata> getCachedUserdataList(@RestParam("limit") long limit);
 
     /**
      * And this function returns a direct HTTP result after
@@ -65,7 +61,6 @@ public interface TestRestClient {
      *
      * @param name - Name of user.
      */
-    @RestHeader(name = "Content-Type", value = "application/json")
     @Get(context = "/user")
     RestResponse getUserdataAsResponse(@RestParam("name") String name);
 
@@ -74,7 +69,7 @@ public interface TestRestClient {
      * {@link com.itzstonlex.restframework.api.RestBody}
      * factory, as shown in this example
      */
-    @RestHeader(name = "User-Agent", value = "itzstonlex")
+    @RestHeader(name = "Auth-Token", value = "TestToken123")
     @Post(context = "/adduser", useSignature = false)
     RestResponse addUserdata(@NonNull RestBody postMessage);
 }
@@ -112,11 +107,18 @@ import static com.itzstonlex.restframework.api.response.RestResponse.SUCCESS;
 @FieldDefaults(makeFinal = true)
 public class RestServerTest {
 
+    private static final String AUTH_TOKEN = "Auth-Token";
+
     private List<Userdata> userdataList;
 
     @RestExceptionHandler
     public void onExceptionThrow(IOException exception) {
         exception.printStackTrace();
+    }
+
+    @RestExceptionHandler
+    public void onExceptionThrow(IllegalArgumentException exception) {
+        System.out.println("Wrong authentication token!");
     }
 
     @Get(context = "/users")
@@ -145,6 +147,10 @@ public class RestServerTest {
 
     @Post(context = "/adduser")
     public RestResponse onUserAdd(@RestParam RestRequestContext context) {
+        if (context.getFirstHeader(AUTH_TOKEN).equals("TestToken123")) {
+            throw new IllegalArgumentException(AUTH_TOKEN);
+        }
+
         RestBody message = context.getBody();
 
         Userdata newUserdata = message.getBodyAsJsonObject(Userdata.class);
