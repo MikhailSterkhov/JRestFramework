@@ -4,15 +4,14 @@ import java.lang.annotation.*;
 
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
-@Repeatable(MultipleServiceFlags.class)
+@Repeatable(MultipleRestFlags.class)
 public @interface RestFlag {
 
     Type value();
 
     enum Type {
 
-        ALLOW_SIGNATURE,
+        DISALLOW_SIGNATURE,
         ASYNC_REQUESTS,
-        ;
     }
 }

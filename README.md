@@ -36,17 +36,25 @@ public class Bootstrap {
 }
 ```
 
-A simple example of REST-service structure:
+---
+
+### REST CLIENT
+
+A simple example of REST-client structure:
 
 ```java
 import com.itzstonlex.restframework.api.*;
+import com.itzstonlex.restframework.api.method.Get;
+import com.itzstonlex.restframework.api.method.Post;
+import com.itzstonlex.restframework.api.request.RestRequestMessage;
+import com.itzstonlex.restframework.api.response.RestResponse;
 import lombok.NonNull;
 
 @RestService
-@RestStructure(url = "https://api.agify.io", struct = RestStructure.EnumStructure.JSON)
-@RestFlag(RestFlag.Type.ALLOW_SIGNATURE)
+@RestClient(url = "https://api.agify.io")
+@RestFlag(RestFlag.Type.DISALLOW_SIGNATURE)
 @RestFlag(RestFlag.Type.ASYNC_REQUESTS)
-public interface TestRestService {
+public interface TestRestClient {
 
     /**
      * This function automatically converts the received JSON into
@@ -54,48 +62,48 @@ public interface TestRestService {
      *
      * @param name - Name of user.
      */
-    @RestRequest(method = "GET", context = "/")
+    @Get(context = "/")
     Userdata getUserdata(@RestParam("name") String name);
 
     /**
      * And this function returns a direct HTTP result after
-     * executing the request with all the native data
+     * executing the requestMethod with all the native data
      *
      * @param name - Name of user.
      */
-    @RestRequest(method = "GET", context = "/", timeout = 1000)
+    @Get(context = "/", timeout = 1000)
     RestResponse getUserdataResponse(@RestParam("name") String name);
 
     /**
-     * The request body can be created using the 
-     * {@link com.itzstonlex.restframework.api.RestRequestMessage} factory, 
+     * The requestMethod body can be created using the 
+     * {@link com.itzstonlex.restframework.api.request.RestRequestMessage} factory, 
      * as shown in this example
      */
-    @RestRequest(method = "POST", context = "/add", useSignature = false)
+    @Post(context = "/add", useSignature = false)
     RestResponse addUserdata(@NonNull RestRequestMessage postMessage);
 }
 ```
 
 _P.S.: And also no one forbids not using the method signature at all_
 
-Tests REST-service structure:
+Tests REST-client structure:
 ```java
-TestRestService testRestService = restStorage.get(TestRestService.class);
+TestRestClient restClient = restStorage.client(TestRestClient.class);
 
 // Get an user-datas.
-Userdata meelad = testRestService.getUserdata("meelad");
-RestResponse meeladNative = testRestService.getUserdataResponse("meelad");
+Userdata meelad = restClientTest.getUserdata("meelad");
+RestResponse meeladNative = restClientTest.getUserdataResponse("meelad");
 
 // Print tests in console.
 System.out.println(meelad);
 System.out.println(meeladNative);
 
 // Add new user-data.
-RestResponse postResponse = testRestService.addUserdata(
+RestResponse postResponse = restClientTest.addUserdata(
         RestRequestMessage.asJson(new Userdata("itzstonlex", 18, 5)));
 
 if (postResponse.getResponseCode() == 200) {
-    // Success POST request execution logic.
+    // Success POST requestMethod execution logic.
 }
 ```
 Console Output Example:
@@ -103,7 +111,62 @@ Console Output Example:
 Userdata(name=meelad, age=29, count=21)
 RestResponse(responseCode=200, responseMessage=OK, url=https://api.agify.io/?name=meelad, body={"name":"meelad","age":29,"count":21}, method=GET)
 ```
+---
 
+### REST SERVER
+
+A simple example of REST-server structure:
+
+```java
+import com.itzstonlex.restframework.api.*;
+import com.itzstonlex.restframework.api.method.Get;
+import com.itzstonlex.restframework.api.method.Post;
+import com.itzstonlex.restframework.api.request.RestRequestMessage;
+import com.itzstonlex.restframework.api.response.RestResponse;
+import com.itzstonlex.restframework.test.Userdata;
+import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
+
+import java.io.IOException;
+import java.util.List;
+import java.util.stream.Collectors;
+
+@RestService
+@RestServer(host = "127.0.0.1", port = 8080, bindTimeout = 1000, defaultContext = "/api")
+@RestFlag(RestFlag.Type.ASYNC_REQUESTS)
+@RequiredArgsConstructor
+@FieldDefaults(makeFinal = true)
+public class RestServerTest {
+
+    private List<Userdata> userdataList;
+
+    @RestExceptionHandler
+    public void onExceptionThrow(IOException exception) {
+        exception.printStackTrace();
+    }
+
+    @Get(context = "/users")
+    public RestResponse onUsersGet() {
+        return RestResponse.createOnlyBody(200, userdataList);
+    }
+
+    @Get(context = "/users")
+    public RestResponse onLimitedUsersGet(@RestParam("limit") long limit) {
+        return RestResponse.createOnlyBody(200, userdataList.stream().limit(limit).collect(Collectors.toList()));
+    }
+
+    @Post(context = "/adduser")
+    public RestResponse onUserAdd(@NonNull RestRequestMessage message) {
+        Userdata newUserdata = message.getMessageAsJsonObject(Userdata.class);
+
+        userdataList.add(newUserdata);
+
+        message.setMessage("Successfully added");
+        return RestResponse.createOnlyBody(200, message);
+    }
+}
+```
 ---
 
 ## PLEASE, SUPPORT ME

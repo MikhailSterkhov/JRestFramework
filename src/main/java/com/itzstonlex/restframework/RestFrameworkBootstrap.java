@@ -1,12 +1,10 @@
 package com.itzstonlex.restframework;
 
-import com.itzstonlex.restframework.proxy.ProjectServicesScanner;
-import com.itzstonlex.restframework.proxy.ServiceProxyManager;
+import com.itzstonlex.restframework.proxy.ProjectScanner;
+import com.itzstonlex.restframework.proxy.RestServiceProxyManager;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.NonFinal;
-
-import java.util.Map;
 
 @Getter
 @FieldDefaults(makeFinal = true)
@@ -15,7 +13,7 @@ public final class RestFrameworkBootstrap {
 
     public static RestFrameworkStorage runServices(@NonNull String packageName, @NonNull ClassLoader classLoader) {
         RestFrameworkBootstrap restFramework = new RestFrameworkBootstrap(
-                new ServiceProxyManager(new ProjectServicesScanner(classLoader))
+                new RestServiceProxyManager(new ProjectScanner(classLoader))
         );
 
         restFramework.initProjectServices(packageName);
@@ -27,7 +25,7 @@ public final class RestFrameworkBootstrap {
     }
 
     private Object lock = new Object();
-    private ServiceProxyManager serviceProxyManager;
+    private RestServiceProxyManager restServiceProxyManager;
 
     @NonFinal
     private RestFrameworkStorage storage;
@@ -36,8 +34,8 @@ public final class RestFrameworkBootstrap {
         synchronized (lock) {
 
             storage = new RestFrameworkStorage();
-            storage.addServices(
-                    serviceProxyManager.findServices(packageName)
+            storage.addRestClients(
+                    restServiceProxyManager.findServices(packageName)
             );
         }
     }

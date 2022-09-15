@@ -8,30 +8,25 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.reflections.Reflections;
 import org.reflections.scanners.Scanners;
-import org.reflections.util.ClasspathHelper;
 import org.reflections.util.ConfigurationBuilder;
 
 import java.util.Set;
-import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
 @FieldDefaults(makeFinal = true)
-public final class ProjectServicesScanner {
+public final class ProjectScanner {
 
     @Getter(AccessLevel.PACKAGE)
     private ClassLoader bootstrapLoader;
 
-    public Set<Class<?>> findServices(@NonNull String packageName) {
+    public Set<Class<?>> scanPackage(@NonNull String packageName) {
         Reflections reflections = new Reflections(
                 new ConfigurationBuilder()
                         .forPackage(packageName, bootstrapLoader)
                         .setScanners(Scanners.Resources, Scanners.TypesAnnotated)
         );
 
-        return reflections.getTypesAnnotatedWith(RestService.class)
-                .stream()
-                .filter(Class::isInterface)
-                .collect(Collectors.toSet());
+        return reflections.getTypesAnnotatedWith(RestService.class);
     }
 
 }
