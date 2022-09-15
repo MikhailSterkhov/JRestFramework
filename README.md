@@ -119,16 +119,6 @@ public class RestServerTest {
     // initial by @RequiredArgsConstructor
     private List<Userdata> userdataList;
 
-    @RestExceptionHandler
-    public void onExceptionThrow(IOException exception) {
-        exception.printStackTrace();
-    }
-
-    @RestExceptionHandler
-    public void onExceptionThrow(IllegalArgumentException exception) {
-        System.out.println("Wrong authentication token!");
-    }
-
     @Get(context = "/users")
     public RestResponse onUsersGet() {
         return RestResponse.createOnlyBody(SUCCESS, userdataList);
@@ -167,6 +157,11 @@ public class RestServerTest {
 
         message.setValue("Successfully added");
         return RestResponse.createOnlyBody(SUCCESS, message);
+    }
+
+    @RestExceptionHandler
+    public void onExceptionThrow(IllegalArgumentException exception) {
+        System.out.println("Wrong authentication token!");
     }
 }
 ```
