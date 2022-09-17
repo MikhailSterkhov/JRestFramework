@@ -9,6 +9,9 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.apache.http.HttpEntity;
+import org.apache.http.client.entity.DecompressingEntity;
+import org.apache.http.client.entity.EntityBuilder;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.RequestBuilder;
 import org.apache.http.entity.StringEntity;
@@ -16,6 +19,7 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.message.BasicHeader;
 import org.apache.http.message.BasicHttpRequest;
+import org.apache.http.util.EntityUtils;
 
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
@@ -144,17 +148,17 @@ public class ClientProxy implements InvocationHandler {
                     }
 
                     if (args != null && args.length == 1 && args[0].getClass().isAssignableFrom(RestBody.class)) {
-                        RestBody message = (RestBody) args[0];
+                        RestBody restBody = ((RestBody) args[0]);
 
-                        if (message.isNull()) {
+                        if (restBody.isNull()) {
                             throw new NullPointerException(method + " - request message is null");
                         }
 
-                        requestBuilder.setEntity(new StringEntity(message.getMessage()));
+                        requestBuilder.setEntity(new StringEntity(restBody.getMessage()));
                     }
 
                     CloseableHttpResponse apacheResponse = httpClient.execute(requestBuilder.build());
-                    return makeMethodResponse(proxy, apacheResponse);
+                    return makeMethodResponse(apacheResponse);
                 }
                 catch (Exception exception) {
                     return finallyException(proxy, exception);
@@ -168,23 +172,23 @@ public class ClientProxy implements InvocationHandler {
             return CompletableFuture.completedFuture(responseSupplier.get());
         }
 
-        @SuppressWarnings("ResultOfMethodCallIgnored")
-        public RestResponse makeResponse(Object proxy, CloseableHttpResponse apacheResponse)
+        public RestResponse makeResponse(CloseableHttpResponse apacheResponse)
         throws Exception {
-            try (InputStream inputStream = apacheResponse.getEntity().getContent()) {
 
-                byte[] arr = new byte[(int) apacheResponse.getEntity().getContentLength()];
-                inputStream.read(arr);
+            HttpEntity httpEntity = apacheResponse.getEntity();
 
-                return Responses.fromMessage(apacheResponse.getStatusLine().getStatusCode(), new String(arr, 0, arr.length));
-            }
+            int statusCode = apacheResponse.getStatusLine().getStatusCode();
+            String statusEntity = EntityUtils.toString(httpEntity);
+
+            return Responses.fromBody(statusCode, RestBody.asText(statusEntity));
         }
 
-        public Object makeMethodResponse(Object proxy, CloseableHttpResponse apacheResponse)
+        public Object makeMethodResponse(CloseableHttpResponse apacheResponse)
         throws Exception {
-            RestResponse response = makeResponse(proxy, apacheResponse);
 
-            Class<?> returnType = this.method.getReturnType();
+            RestResponse response = makeResponse(apacheResponse);
+
+            Class<?> returnType = method.getReturnType();
 
             if (!returnType.isAssignableFrom(RestResponse.class)) {
                 return response.getBody().getAsJsonObject(returnType);
