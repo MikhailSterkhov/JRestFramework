@@ -1,5 +1,7 @@
 package com.itzstonlex.restframework.api;
 
+import com.itzstonlex.restframework.api.multiple.MultipleRestFlags;
+
 import java.lang.annotation.*;
 
 @Target(ElementType.TYPE)

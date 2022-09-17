@@ -2,13 +2,13 @@ package com.itzstonlex.restframework.proxy.type;
 
 import com.itzstonlex.restframework.api.*;
 import com.itzstonlex.restframework.api.request.RestRequest;
+import com.itzstonlex.restframework.api.response.Responses;
 import com.itzstonlex.restframework.api.response.RestResponse;
 import com.itzstonlex.restframework.util.RestUtilities;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
-import org.apache.http.Header;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.RequestBuilder;
 import org.apache.http.entity.StringEntity;
@@ -87,7 +87,7 @@ public class ClientProxy implements InvocationHandler {
         private RestClient restClient;
 
         private RestFlag.Type[] restFlagsArray;
-        private RestHeader[] restHeaders;
+        private Header[] headers;
 
         private RestRequest request;
 
@@ -105,15 +105,15 @@ public class ClientProxy implements InvocationHandler {
                     catch (IOException exception) {
                         RestUtilities.handleException(proxy, exception, exceptionHandlersMap);
 
-                        return RestResponse.create(500, "Internal Server Error", fullLink, exception.getMessage(), request.getMethod());
+                        return Responses.fromMessage(Responses.INTERNAL_SERVER_ERROR, exception.getMessage());
                     }
                 }
 
                 try (CloseableHttpClient httpClient = HttpClientBuilder.create().build()) {
                     RequestBuilder requestBuilder = RequestBuilder.copy(new BasicHttpRequest(request.getMethod(), fullLink));
 
-                    for (RestHeader restHeader : restHeaders) {
-                        Header apacheHeader = new BasicHeader(restHeader.name(), restHeader.value());
+                    for (Header restHeader : headers) {
+                        org.apache.http.Header apacheHeader = new BasicHeader(restHeader.name(), restHeader.value());
 
                         switch (restHeader.operate()) {
                             case ADD: {
@@ -144,17 +144,17 @@ public class ClientProxy implements InvocationHandler {
                         catch (UnsupportedEncodingException exception) {
                             RestUtilities.handleException(proxy, exception, exceptionHandlersMap);
 
-                            return RestResponse.create(500, "Internal Server Error", fullLink, exception.getMessage(), request.getMethod());
+                            return Responses.fromMessage(Responses.INTERNAL_SERVER_ERROR, exception.getMessage());
                         }
                     }
 
                     CloseableHttpResponse apacheResponse = httpClient.execute(requestBuilder.build());
-                    return makeMethodResponse(proxy, apacheResponse, fullLink, request.getMethod());
+                    return makeMethodResponse(proxy, apacheResponse);
                 }
                 catch (IOException exception) {
                     RestUtilities.handleException(proxy, exception, exceptionHandlersMap);
 
-                    return RestResponse.create(500, "Internal Server Error", fullLink, exception.getMessage(), request.getMethod());
+                    return Responses.fromMessage(Responses.INTERNAL_SERVER_ERROR, exception.getMessage());
                 }
             };
 
@@ -166,29 +166,23 @@ public class ClientProxy implements InvocationHandler {
         }
 
         @SuppressWarnings("ResultOfMethodCallIgnored")
-        public RestResponse makeResponse(Object proxy, CloseableHttpResponse apacheResponse, String link, String method) {
+        public RestResponse makeResponse(Object proxy, CloseableHttpResponse apacheResponse) {
             try (InputStream inputStream = apacheResponse.getEntity().getContent()) {
 
                 byte[] arr = new byte[(int) apacheResponse.getEntity().getContentLength()];
                 inputStream.read(arr);
 
-                return RestResponse.create(
-
-                        apacheResponse.getStatusLine().getStatusCode(),
-                        apacheResponse.getStatusLine().getReasonPhrase(),
-
-                        link, new String(arr, 0, arr.length), method
-                );
+                return Responses.fromMessage(apacheResponse.getStatusLine().getStatusCode(), new String(arr, 0, arr.length));
             }
             catch (Exception exception) {
                 RestUtilities.handleException(proxy, exception, exceptionHandlersMap);
 
-                return RestResponse.create(500, "Internal Server Error", link, exception.getMessage(), request.getMethod());
+                return Responses.fromMessage(Responses.INTERNAL_SERVER_ERROR, exception.getMessage());
             }
         }
 
-        public Object makeMethodResponse(Object proxy, CloseableHttpResponse apacheResponse, String link, String method) {
-            RestResponse response = makeResponse(proxy, apacheResponse, link, method);
+        public Object makeMethodResponse(Object proxy, CloseableHttpResponse apacheResponse) {
+            RestResponse response = makeResponse(proxy, apacheResponse);
 
             Class<?> returnType = this.method.getReturnType();
 

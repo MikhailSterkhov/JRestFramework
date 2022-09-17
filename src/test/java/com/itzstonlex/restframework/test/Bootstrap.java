@@ -1,7 +1,7 @@
 package com.itzstonlex.restframework.test;
 
 import com.itzstonlex.restframework.RestFrameworkBootstrap;
-import com.itzstonlex.restframework.RestFrameworkStorage;
+import com.itzstonlex.restframework.RestServicePublicManager;
 import com.itzstonlex.restframework.api.RestBody;
 import com.itzstonlex.restframework.api.response.RestResponse;
 
@@ -10,7 +10,7 @@ import java.util.ArrayList;
 public final class Bootstrap {
 
     public static void main(String[] args) {
-        RestFrameworkStorage rest = RestFrameworkBootstrap.runServices(Bootstrap.class);
+        RestServicePublicManager rest = RestFrameworkBootstrap.runServices(Bootstrap.class);
 
         // Bind a REST-server
         rest.bind(RestServerTest.class, new ArrayList<>());

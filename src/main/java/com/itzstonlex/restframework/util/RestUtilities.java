@@ -3,6 +3,8 @@ package com.itzstonlex.restframework.util;
 import com.google.gson.Gson;
 import com.itzstonlex.restframework.api.*;
 import com.itzstonlex.restframework.api.method.*;
+import com.itzstonlex.restframework.api.multiple.MultipleRestFlags;
+import com.itzstonlex.restframework.api.multiple.MultipleHeaders;
 import com.itzstonlex.restframework.api.request.RestRequest;
 import com.itzstonlex.restframework.proxy.type.ClientProxy;
 import com.itzstonlex.restframework.proxy.type.ServerProxy;
@@ -133,11 +135,11 @@ public class RestUtilities {
         return declaringClass.getDeclaredAnnotation(annotationType).value();
     }
 
-    public RestHeader[] getHeaders(Method method) {
-        Class<MultipleRestHeaders> annotationType = MultipleRestHeaders.class;
+    public Header[] getHeaders(Method method) {
+        Class<MultipleHeaders> annotationType = MultipleHeaders.class;
 
         if (!method.isAnnotationPresent(annotationType)) {
-            return new RestHeader[0];
+            return new Header[0];
         }
 
         return method.getDeclaredAnnotation(annotationType).value();

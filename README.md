@@ -27,7 +27,6 @@ import com.itzstonlex.restframework.api.method.Get;
 import com.itzstonlex.restframework.api.method.Post;
 import com.itzstonlex.restframework.api.RestBody;
 import com.itzstonlex.restframework.api.response.RestResponse;
-import lombok.NonNull;
 
 @RestService
 @RestClient(url = "http://localhost:8082/api")
@@ -49,7 +48,7 @@ public interface RestClientTest {
      * @param name - Name of user.
      */
     @Get(context = "/user")
-    @RestHeader(name = "Content-Type", value = "application/json")
+    @Header(name = "Content-Type", value = "application/json")
     Userdata getUserdata(@RestParam("name") String name);
 
     /**
@@ -76,8 +75,8 @@ public interface RestClientTest {
      * factory, as shown in this example
      */
     @Post(context = "/adduser", useSignature = false)
-    @RestHeader(name = "Content-Type", value = "application/json")
-    @RestHeader(name = "Auth-Token", value = "TestToken123", operate = RestHeader.Operation.ADD)
+    @Header(name = "Content-Type", value = "application/json")
+    @Header(name = "Auth-Token", value = "TestToken123", operate = Header.Operation.ADD)
     RestResponse addUserdata(@RestParam RestBody body);
 }
 ```
@@ -94,60 +93,57 @@ A simple example of REST-server structure:
 import com.itzstonlex.restframework.api.*;
 import com.itzstonlex.restframework.api.method.Get;
 import com.itzstonlex.restframework.api.method.Post;
-import com.itzstonlex.restframework.api.RestBody;
 import com.itzstonlex.restframework.api.request.RestRequestContext;
+import com.itzstonlex.restframework.api.response.Responses;
 import com.itzstonlex.restframework.api.response.RestResponse;
-import com.itzstonlex.restframework.test.Userdata;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static com.itzstonlex.restframework.api.response.RestResponse.CLIENT_ERR;
-import static com.itzstonlex.restframework.api.response.RestResponse.SUCCESS;
-
 @RestService
 @RestServer(host = "localhost", port = 8082, defaultContext = "/api")
-@RequiredArgsConstructor
-@FieldDefaults(makeFinal = true)
 public class RestServerTest {
 
-    private static final int NOT_FOUND_ERR = CLIENT_ERR + 4;
+    private static final int NOT_FOUND_ERR = Responses.BAD_REQUEST + 4;
+    private static final String AUTH_TOKEN = "Auth-Token", TOKEN = "TestToken123";
 
-    private static final String AUTH_TOKEN = "Auth-Token";
-
-    // initial by @RequiredArgsConstructor
-    private List<Userdata> userdataList;
+    private final List<Userdata> userdataList;
+    
+    public RestServerTest(List<Userdata> userdataList) {
+        this.userdataList = userdataList;
+    }
 
     @Get(context = "/users", timeout = 200)
     public RestResponse onUsersGet() {
-        return RestResponse.createOnlyBody(SUCCESS, userdataList);
+        return Responses.fromJSON(Responses.OK, userdataList);
     }
 
     @Get(context = "/users")
     public RestResponse onLimitedUsersGet(@RestParam("limit") long limit) {
-        return RestResponse.createOnlyBody(SUCCESS, userdataList.stream().limit(limit).collect(Collectors.toList()));
+        return Responses.fromJSON(Responses.OK, userdataList.stream().limit(limit).collect(Collectors.toList()));
     }
 
     @Get(context = "/user")
     public RestResponse onUserGet(@RestParam("name") String name) {
+
         Userdata userdata = userdataList.stream()
                 .filter(cached -> cached.getName().equalsIgnoreCase(name))
                 .findFirst()
                 .orElse(null);
 
         if (userdata == null) {
-            return RestResponse.createOnlyBody(NOT_FOUND_ERR, RestBody.asText("Userdata is not found"));
+            return Responses.fromMessage(NOT_FOUND_ERR, "Userdata is not found");
         }
 
-        return RestResponse.createOnlyBody(SUCCESS, userdata);
+        return Responses.fromJSON(Responses.OK, userdata);
     }
 
     @Post(context = "/adduser", timeout = 250)
     public RestResponse onUserAdd(@RestParam RestRequestContext context) {
 
-        if (!context.getFirstHeader(AUTH_TOKEN).equals("TestToken123")) {
+        if (!context.getFirstHeader(AUTH_TOKEN).equals(TOKEN)) {
             throw new IllegalArgumentException(AUTH_TOKEN);
         }
 
@@ -156,8 +152,7 @@ public class RestServerTest {
         Userdata newUserdata = message.getAsJsonObject(Userdata.class);
         userdataList.add(newUserdata);
 
-        message.setMessage("Successfully added");
-        return RestResponse.createOnlyBody(SUCCESS, message);
+        return Responses.fromMessageAsJSON(Responses.OK, "Successfully added");
     }
 
     @RestExceptionHandler
@@ -176,12 +171,12 @@ project for the requirements of this library:
 
 ```java
 import com.itzstonlex.restframework.RestFrameworkBootstrap;
-import com.itzstonlex.restframework.RestFrameworkStorage;
+import com.itzstonlex.restframework.RestServicePublicManager;
 
 public class Bootstrap {
 
     public static void main(String[] args) {
-        RestFrameworkStorage rest = RestFrameworkBootstrap.runServices(Bootstrap.class);
+        RestServicePublicManager rest = RestFrameworkBootstrap.runServices(Bootstrap.class);
     }
 }
 ```
@@ -209,9 +204,9 @@ System.out.println("[Test] " + restClient.getCachedUserdataList(2));
 ```
 Console Output Example:
 ```shell
-[Test] RestResponse(statusCode=200, statusMessage=OK, url=http://localhost:8082/api/adduser, body={"message":"Successfully added"}, method=POST)
+[Test] RestResponse(statusCode=200, statusMessage=OK, body={"message":"Successfully added"})
 [Test] Userdata(name=itzstonlex, age=18, count=3)
-[Test] RestResponse(statusCode=200, statusMessage=OK, url=http://localhost:8082/api/user?name=itzstonlex, body={"name":"itzstonlex","age":18,"count":3}, method=GET)
+[Test] RestResponse(statusCode=200, statusMessage=OK, body={"name":"itzstonlex","age":18,"count":3})
 [Test] [{name=itzstonlex, age=18.0, count=3.0}]
 ```
 ---

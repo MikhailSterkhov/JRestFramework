@@ -14,7 +14,7 @@ import java.util.Set;
 
 @RequiredArgsConstructor
 @FieldDefaults(makeFinal = true)
-public final class ProjectScanner {
+public class ProjectScanner {
 
     @Getter(AccessLevel.PACKAGE)
     private ClassLoader bootstrapLoader;

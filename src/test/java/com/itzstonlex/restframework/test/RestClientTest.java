@@ -3,6 +3,7 @@ package com.itzstonlex.restframework.test;
 import com.itzstonlex.restframework.api.*;
 import com.itzstonlex.restframework.api.method.Get;
 import com.itzstonlex.restframework.api.method.Post;
+import com.itzstonlex.restframework.api.response.JsonResponse;
 import com.itzstonlex.restframework.api.response.RestResponse;
 
 import java.io.IOException;
@@ -28,7 +29,7 @@ public interface RestClientTest {
      * @param name - Name of user.
      */
     @Get(context = "/user")
-    @RestHeader(name = "Content-Type", value = "application/json")
+    @Header(name = "Content-Type", value = "application/json")
     Userdata getUserdata(@RestParam("name") String name);
 
     /**
@@ -55,7 +56,7 @@ public interface RestClientTest {
      * factory, as shown in this example
      */
     @Post(context = "/adduser", useSignature = false)
-    @RestHeader(name = "Content-Type", value = "application/json")
-    @RestHeader(name = "Auth-Token", value = "TestToken123", operate = RestHeader.Operation.ADD)
+    @Header(name = "Content-Type", value = "application/json")
+    @Header(name = "Auth-Token", value = "TestToken123", operate = Header.Operation.ADD)
     RestResponse addUserdata(@RestParam RestBody body);
 }

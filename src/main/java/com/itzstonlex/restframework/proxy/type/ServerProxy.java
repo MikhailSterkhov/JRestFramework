@@ -109,8 +109,6 @@ public class ServerProxy implements MethodHandler {
         throws Exception {
 
             RestResponse response = (RestResponse) declaredMethod.invoke(proxyInstance, invokeArgs);
-            response.setMethod(exchange.getRequestMethod());
-
             byte[] responseBytes = response.getBody().getAsByteArray();
 
             exchange.sendResponseHeaders(response.getStatusCode(), responseBytes.length);
