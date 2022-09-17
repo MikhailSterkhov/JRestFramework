@@ -1,7 +1,6 @@
 package com.itzstonlex.restframework.proxy;
 
 import com.itzstonlex.restframework.api.RestClient;
-import com.itzstonlex.restframework.api.RestServer;
 import com.itzstonlex.restframework.util.RestUtilities;
 import lombok.Getter;
 import lombok.NonNull;
