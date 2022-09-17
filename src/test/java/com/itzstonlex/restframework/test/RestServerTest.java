@@ -6,6 +6,7 @@ import com.itzstonlex.restframework.api.method.Post;
 import com.itzstonlex.restframework.api.request.RestRequestContext;
 import com.itzstonlex.restframework.api.response.Responses;
 import com.itzstonlex.restframework.api.response.RestResponse;
+import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 
@@ -35,7 +36,6 @@ public class RestServerTest {
 
     @Get(context = "/user")
     public RestResponse onUserGet(@RestParam("name") String name) {
-
         Userdata userdata = userdataList.stream()
                 .filter(cached -> cached.getName().equalsIgnoreCase(name))
                 .findFirst()
@@ -49,9 +49,10 @@ public class RestServerTest {
     }
 
     @Post(context = "/adduser", timeout = 250)
-    public RestResponse onUserAdd(@RestParam RestRequestContext context) {
+    public RestResponse onUserAdd(@NonNull RestRequestContext context) {
+        String tokenHeader = context.getFirstHeader(AUTH_TOKEN);
 
-        if (!context.getFirstHeader(AUTH_TOKEN).equals(TOKEN)) {
+        if (tokenHeader == null || !tokenHeader.equals(TOKEN)) {
             throw new IllegalArgumentException(AUTH_TOKEN);
         }
 

@@ -220,7 +220,12 @@ public class RestUtilities {
     }
 
     @SneakyThrows
-    public void handleException(Object source, Throwable throwable, Map<Class<? extends Throwable>, List<Method>> exceptionHandlersMap) {
+    public void handleException(Object source, Throwable cause, Map<Class<? extends Throwable>, List<Method>> exceptionHandlersMap) {
+        Throwable throwable = cause;
+        while (throwable.getCause() != null) {
+            throwable = throwable.getCause();
+        }
+
         if (exceptionHandlersMap.isEmpty()) {
             throwable.printStackTrace();
             return;
