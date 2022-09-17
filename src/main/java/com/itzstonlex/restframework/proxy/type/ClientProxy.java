@@ -40,7 +40,6 @@ public class ClientProxy implements InvocationHandler {
     private Map<String, ExecutableMethod> executionsMap = new HashMap<>();
     private Map<Class<? extends Throwable>, List<Method>> exceptionHandlersMap = new HashMap<>();
 
-    @SuppressWarnings("unchecked")
     private ClientProxy(Class<?> interfaceClass) {
         RestClient restClient = RestUtilities.getClientAnnotation(interfaceClass);
         RestFlag[] restFlagsArray = RestUtilities.getFlagsAnnotations(interfaceClass);
@@ -50,44 +49,11 @@ public class ClientProxy implements InvocationHandler {
         }
 
         for (Method method : interfaceClass.getDeclaredMethods()) {
-
-            if (method.isAnnotationPresent(RestExceptionHandler.class)) {
-
-                if (method.getParameterCount() != 1) {
-                    throw new IllegalArgumentException("Exception handler " + method + " must be have only 1 Throwable superclass in signature");
-                }
-
-                Class<? extends Throwable> exceptionType = (Class<? extends Throwable>) method.getParameters()[0].getType();
-
-                List<Method> exceptionHandlers = exceptionHandlersMap.computeIfAbsent(exceptionType, k -> new ArrayList<>());
-                exceptionHandlers.add(method);
-
+            if (RestUtilities.checkAndSaveExceptionHandler(method, exceptionHandlersMap)) {
                 continue;
             }
 
-            RestRequest request = null;
-            RequestMethod requestMethod = method.getDeclaredAnnotation(RequestMethod.class);
-
-            if (requestMethod == null) {
-
-                Set<Class<? extends Annotation>> annotationsSet = RestUtilities.getRequestAnnotationsTypes();
-                for (Class<? extends Annotation> annotationType : annotationsSet) {
-
-                    Annotation declaredAnnotation = method.getDeclaredAnnotation(annotationType);
-
-                    if (declaredAnnotation != null) {
-                        request = RestUtilities.newRequestByAnnotationType(declaredAnnotation);
-                    }
-                }
-            }
-            else {
-                request = RestUtilities.newRequestByAnnotationType(requestMethod);
-            }
-
-            if (request == null) {
-                throw new NullPointerException("no method request for " + method);
-            }
-
+            RestRequest request = RestUtilities.newRestRequest(method);
             executionsMap.put(method.toString(),
                     new ExecutableMethod(restClient,
 

@@ -12,8 +12,8 @@ public final class Bootstrap {
     public static void main(String[] args) {
         RestFrameworkStorage rest = RestFrameworkBootstrap.runServices(Bootstrap.class);
 
-        // Initial REST-server
-        rest.initServer(RestServerTest.class, new ArrayList<>());
+        // Bind a REST-server
+        rest.bind(RestServerTest.class, new ArrayList<>());
 
         // Get initialized REST-client
         RestClientTest restClient = rest.get(RestClientTest.class);

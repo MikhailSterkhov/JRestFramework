@@ -53,7 +53,6 @@ public class ServerProxy implements MethodHandler {
     @NonFinal
     private Object proxyInstance;
 
-    @SuppressWarnings("unchecked")
     private ServerProxy(Class<?> serverSuperclass) {
         RestServer restServer = RestUtilities.getServerAnnotation(serverSuperclass);
         RestFlag[] restFlagsArray = RestUtilities.getFlagsAnnotations(serverSuperclass);
@@ -66,17 +65,7 @@ public class ServerProxy implements MethodHandler {
             HttpServer httpServer = HttpServer.create();
 
             for (Method method : serverSuperclass.getDeclaredMethods()) {
-                if (method.isAnnotationPresent(RestExceptionHandler.class)) {
-
-                    if (method.getParameterCount() != 1) {
-                        throw new IllegalArgumentException("Exception handler " + method + " must be have only 1 Throwable superclass in signature");
-                    }
-
-                    Class<? extends Throwable> exceptionType = (Class<? extends Throwable>) method.getParameters()[0].getType();
-
-                    List<Method> exceptionHandlers = exceptionHandlersMap.computeIfAbsent(exceptionType, k -> new ArrayList<>());
-                    exceptionHandlers.add(method);
-
+                if (RestUtilities.checkAndSaveExceptionHandler(method, exceptionHandlersMap)) {
                     continue;
                 }
 
@@ -84,28 +73,7 @@ public class ServerProxy implements MethodHandler {
                     continue;
                 }
 
-                RestRequest request = null;
-                RequestMethod requestMethod = method.getDeclaredAnnotation(RequestMethod.class);
-
-                if (requestMethod == null) {
-
-                    Set<Class<? extends Annotation>> annotationsSet = RestUtilities.getRequestAnnotationsTypes();
-                    for (Class<? extends Annotation> annotationType : annotationsSet) {
-
-                        Annotation declaredAnnotation = method.getDeclaredAnnotation(annotationType);
-
-                        if (declaredAnnotation != null) {
-                            request = RestUtilities.newRequestByAnnotationType(declaredAnnotation);
-                        }
-                    }
-                } else {
-                    request = RestUtilities.newRequestByAnnotationType(requestMethod);
-                }
-
-                if (request == null) {
-                    throw new NullPointerException(method + ": no method request");
-                }
-
+                RestRequest request = RestUtilities.newRestRequest(method);
                 String contextName = restServer.defaultContext() + request.getContext();
 
                 httpServer.createContext(contextName,

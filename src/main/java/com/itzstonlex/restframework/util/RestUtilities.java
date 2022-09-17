@@ -143,6 +143,52 @@ public class RestUtilities {
         return method.getDeclaredAnnotation(annotationType).value();
     }
 
+    public RestRequest newRestRequest(Method method) {
+        RestRequest request = null;
+        RequestMethod requestMethod = method.getDeclaredAnnotation(RequestMethod.class);
+
+        if (requestMethod == null) {
+
+            Set<Class<? extends Annotation>> annotationsSet = RestUtilities.getRequestAnnotationsTypes();
+            for (Class<? extends Annotation> annotationType : annotationsSet) {
+
+                Annotation declaredAnnotation = method.getDeclaredAnnotation(annotationType);
+
+                if (declaredAnnotation != null) {
+                    request = RestUtilities.newRequestByAnnotationType(declaredAnnotation);
+                }
+            }
+        }
+        else {
+            request = RestUtilities.newRequestByAnnotationType(requestMethod);
+        }
+
+        if (request == null) {
+            throw new NullPointerException("no method request for " + method);
+        }
+
+        return request;
+    }
+
+    @SuppressWarnings("unchecked")
+    public boolean checkAndSaveExceptionHandler(Method method, Map<Class<? extends Throwable>, List<Method>> exceptionHandlersMap) {
+        if (method.isAnnotationPresent(RestExceptionHandler.class)) {
+
+            if (method.getParameterCount() != 1) {
+                throw new IllegalArgumentException("Exception handler " + method + " must be have only 1 Throwable superclass in signature");
+            }
+
+            Class<? extends Throwable> exceptionType = (Class<? extends Throwable>) method.getParameters()[0].getType();
+
+            List<Method> exceptionHandlers = exceptionHandlersMap.computeIfAbsent(exceptionType, k -> new ArrayList<>());
+            exceptionHandlers.add(method);
+
+            return true;
+        }
+
+        return false;
+    }
+
     public String makeLinkSignature(Method method, Object[] args)
     throws UnsupportedEncodingException {
 

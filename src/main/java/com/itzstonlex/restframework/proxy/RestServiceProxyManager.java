@@ -1,6 +1,7 @@
 package com.itzstonlex.restframework.proxy;
 
 import com.itzstonlex.restframework.api.RestClient;
+import com.itzstonlex.restframework.api.RestServer;
 import com.itzstonlex.restframework.util.RestUtilities;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
@@ -32,7 +33,9 @@ public final class RestServiceProxyManager {
                 );
             }
 
-            // todo - maybe any more rest service?
+            if (serviceClass.isAnnotationPresent(RestServer.class)) {
+                proxyInstance = new Object();
+            }
 
             if (proxyInstance != null) {
                 servicesMap.put(serviceClass, proxyInstance);

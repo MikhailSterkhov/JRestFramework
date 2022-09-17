@@ -11,7 +11,7 @@ import lombok.experimental.FieldDefaults;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static com.itzstonlex.restframework.api.response.RestResponse.CLIENT_ERROR;
+import static com.itzstonlex.restframework.api.response.RestResponse.CLIENT_ERR;
 import static com.itzstonlex.restframework.api.response.RestResponse.SUCCESS;
 
 @RestService
@@ -43,7 +43,7 @@ public class RestServerTest {
                 .orElse(null);
 
         if (userdata == null) {
-            return RestResponse.createOnlyBody(CLIENT_ERROR + 4, RestBody.asText("Userdata is not found"));
+            return RestResponse.createOnlyBody(CLIENT_ERR + 4, RestBody.asText("Userdata is not found"));
         }
 
         return RestResponse.createOnlyBody(SUCCESS, userdata);

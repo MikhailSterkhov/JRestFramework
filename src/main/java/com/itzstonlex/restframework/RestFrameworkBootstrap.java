@@ -37,7 +37,7 @@ public final class RestFrameworkBootstrap {
         synchronized (lock) {
 
             storage = new RestFrameworkStorage();
-            storage.addRestClients(
+            storage.addFoundedServices(
                     restServiceProxyManager.findServices(packageName)
             );
         }

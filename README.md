@@ -101,11 +101,10 @@ import com.itzstonlex.restframework.test.Userdata;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static com.itzstonlex.restframework.api.response.RestResponse.CLIENT_ERROR;
+import static com.itzstonlex.restframework.api.response.RestResponse.CLIENT_ERR;
 import static com.itzstonlex.restframework.api.response.RestResponse.SUCCESS;
 
 @RestService
@@ -113,9 +112,11 @@ import static com.itzstonlex.restframework.api.response.RestResponse.SUCCESS;
 @RequiredArgsConstructor
 @FieldDefaults(makeFinal = true)
 public class RestServerTest {
+    
+    private static final int NOT_FOUND_ERR = CLIENT_ERR + 4;
 
     private static final String AUTH_TOKEN = "Auth-Token";
-    
+
     // initial by @RequiredArgsConstructor
     private List<Userdata> userdataList;
 
@@ -137,7 +138,7 @@ public class RestServerTest {
                 .orElse(null);
 
         if (userdata == null) {
-            return RestResponse.createOnlyBody(CLIENT_ERROR + 4, RestBody.asText("Userdata is not found"));
+            return RestResponse.createOnlyBody(NOT_FOUND_ERR, RestBody.asText("Userdata is not found"));
         }
 
         return RestResponse.createOnlyBody(SUCCESS, userdata);
@@ -145,7 +146,7 @@ public class RestServerTest {
 
     @Post(context = "/adduser", timeout = 250)
     public RestResponse onUserAdd(@RestParam RestRequestContext context) {
-        
+
         if (!context.getFirstHeader(AUTH_TOKEN).equals("TestToken123")) {
             throw new IllegalArgumentException(AUTH_TOKEN);
         }
@@ -187,8 +188,8 @@ public class Bootstrap {
 
 Example REST services tests:
 ```java
-// Initial REST-server
-rest.initServer(RestServerTest.class, new ArrayList<>());
+// Bind a REST-server
+rest.bind(RestServerTest.class, new ArrayList<>());
 
 // Get initialized REST-client
 RestClientTest restClient = rest.get(RestClientTest.class);

@@ -18,10 +18,14 @@ public class RestResponse {
 // ===================================================== //
 
     public static final int INFO = 100;
+
     public static final int SUCCESS = 200;
+
     public static final int REDIRECT = 300;
-    public static final int CLIENT_ERROR = 400;
-    public static final int SERVER_ERROR = 500;
+
+    public static final int CLIENT_ERR = 400;
+
+    public static final int SERVER_ERR = 500;
 
     public static RestResponse create(int statusCode) {
         return new RestResponse(statusCode, null, null, null, null);

@@ -12,18 +12,23 @@ import java.util.WeakHashMap;
 @NoArgsConstructor(access = AccessLevel.PACKAGE)
 public final class RestFrameworkStorage {
 
-    private Map<Class<?>, Object> restClientsMap = new WeakHashMap<>();
+    private Map<Class<?>, Object> foundedServices = new WeakHashMap<>();
 
-    void addRestClients(Map<Class<?>, Object> servicesMap) {
-        this.restClientsMap.putAll(servicesMap);
+    void addFoundedServices(Map<Class<?>, Object> foundedServices) {
+        this.foundedServices.putAll(foundedServices);
     }
 
     @SuppressWarnings("unchecked")
     public <T> T get(Class<T> restClientType) {
-        return (T) restClientsMap.get(restClientType);
+        return (T) foundedServices.get(restClientType);
     }
 
-    public <T> T initServer(Class<T> restServerType, Object... initargs) {
-        return RestUtilities.createServerProxy(restServerType, initargs);
+    public void bind(Class<?> restServerType, Object... initargs) {
+        if (!foundedServices.containsKey(restServerType)) {
+            throw new IllegalArgumentException(restServerType + " is not marked @RestService");
+        }
+
+        RestUtilities.createServerProxy(restServerType, initargs);
     }
+
 }
