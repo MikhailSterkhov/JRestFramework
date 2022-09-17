@@ -1,7 +1,6 @@
 package com.itzstonlex.restframework.proxy.type;
 
 import com.itzstonlex.restframework.api.*;
-import com.itzstonlex.restframework.api.method.RequestMethod;
 import com.itzstonlex.restframework.api.request.RestRequest;
 import com.itzstonlex.restframework.api.response.RestResponse;
 import com.itzstonlex.restframework.util.RestUtilities;
@@ -21,7 +20,6 @@ import org.apache.http.message.BasicHttpRequest;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
-import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
@@ -141,7 +139,7 @@ public class ClientProxy implements InvocationHandler {
                         }
 
                         try {
-                            requestBuilder.setEntity(new StringEntity(message.getValue()));
+                            requestBuilder.setEntity(new StringEntity(message.getMessage()));
                         }
                         catch (UnsupportedEncodingException exception) {
                             RestUtilities.handleException(proxy, exception, exceptionHandlersMap);
@@ -195,7 +193,7 @@ public class ClientProxy implements InvocationHandler {
             Class<?> returnType = this.method.getReturnType();
 
             if (!returnType.isAssignableFrom(RestResponse.class)) {
-                return response.getBodyAsJsonObject(returnType);
+                return response.getBody().getAsJsonObject(returnType);
             }
 
             return response;

@@ -112,7 +112,7 @@ import static com.itzstonlex.restframework.api.response.RestResponse.SUCCESS;
 @RequiredArgsConstructor
 @FieldDefaults(makeFinal = true)
 public class RestServerTest {
-    
+
     private static final int NOT_FOUND_ERR = CLIENT_ERR + 4;
 
     private static final String AUTH_TOKEN = "Auth-Token";
@@ -153,10 +153,10 @@ public class RestServerTest {
 
         RestBody message = context.getBody();
 
-        Userdata newUserdata = message.getBodyAsJsonObject(Userdata.class);
+        Userdata newUserdata = message.getAsJsonObject(Userdata.class);
         userdataList.add(newUserdata);
 
-        message.setValue("Successfully added");
+        message.setMessage("Successfully added");
         return RestResponse.createOnlyBody(SUCCESS, message);
     }
 
@@ -209,9 +209,9 @@ System.out.println("[Test] " + restClient.getCachedUserdataList(2));
 ```
 Console Output Example:
 ```shell
-[Test] RestResponse(responseCode=200, responseMessage=OK, url=http://localhost:8082/api/adduser, body={"message":"Successfully added"}, method=POST)
+[Test] RestResponse(statusCode=200, statusMessage=OK, url=http://localhost:8082/api/adduser, body={"message":"Successfully added"}, method=POST)
 [Test] Userdata(name=itzstonlex, age=18, count=3)
-[Test] RestResponse(responseCode=200, responseMessage=OK, url=http://localhost:8082/api/user?name=itzstonlex, body={"name":"itzstonlex","age":18,"count":3}, method=GET)
+[Test] RestResponse(statusCode=200, statusMessage=OK, url=http://localhost:8082/api/user?name=itzstonlex, body={"name":"itzstonlex","age":18,"count":3}, method=GET)
 [Test] [{name=itzstonlex, age=18.0, count=3.0}]
 ```
 ---

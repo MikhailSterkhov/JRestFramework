@@ -1,5 +1,6 @@
 package com.itzstonlex.restframework.api.response;
 
+import com.itzstonlex.restframework.api.RestBody;
 import com.itzstonlex.restframework.util.RestUtilities;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -39,8 +40,8 @@ public class RestResponse {
         return new RestResponse(statusCode, responseMessage, url, null, null);
     }
 
-    private static String convertBody(Object bodyObject) {
-        return bodyObject instanceof String ? bodyObject.toString() : RestUtilities.GSON.toJson(bodyObject);
+    private static RestBody convertBody(Object bodyObject) {
+        return RestBody.asText(bodyObject instanceof String ? bodyObject.toString() : RestUtilities.GSON.toJson(bodyObject));
     }
 
     public static RestResponse create(int statusCode, String responseMessage, String url, Object body) {
@@ -64,25 +65,8 @@ public class RestResponse {
     private String url;
 
     @NonFinal
-    private String body;
+    private RestBody body;
 
     @NonFinal
     private String method;
-
-    public byte[] getBodyAsByteArray() {
-        return body.getBytes();
-    }
-
-    public byte[] getBodyAsByteArray(Charset charset) {
-        return body.getBytes(charset);
-    }
-
-    public <T> T getBodyAsJsonObject(Class<T> type) {
-        try {
-            return RestUtilities.GSON.fromJson(body, type);
-        }
-        catch (Exception exception) {
-            return null;
-        }
-    }
 }

@@ -58,10 +58,10 @@ public class RestServerTest {
 
         RestBody message = context.getBody();
 
-        Userdata newUserdata = message.getBodyAsJsonObject(Userdata.class);
+        Userdata newUserdata = message.getAsJsonObject(Userdata.class);
         userdataList.add(newUserdata);
 
-        message.setValue("Successfully added");
+        message.setMessage("Successfully added");
         return RestResponse.createOnlyBody(SUCCESS, message);
     }
 

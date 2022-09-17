@@ -7,7 +7,6 @@ import java.nio.charset.Charset;
 
 @Getter
 @Setter
-@ToString
 @EqualsAndHashCode
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class RestBody {
@@ -20,27 +19,32 @@ public class RestBody {
         return asText(RestUtilities.GSON.toJson(object));
     }
 
-    @ToString.Include
-    private String value;
+    private String message;
 
     public boolean isNull() {
-        return value == null;
+        return message == null;
     }
 
-    public <T> T getBodyAsJsonObject(@NonNull Class<T> type) {
+    public <T> T getAsJsonObject(@NonNull Class<T> type) {
         try {
-            return RestUtilities.GSON.fromJson(value, type);
+            return RestUtilities.GSON.fromJson(message, type);
         }
         catch (Exception exception) {
             return null;
         }
     }
 
-    public byte[] getBodyAsByteArray() {
-        return value.getBytes();
+    public byte[] getAsByteArray() {
+        return message.getBytes();
     }
 
-    public byte[] getBodyAsByteArray(Charset charset) {
-        return value.getBytes(charset);
+    public byte[] getAsByteArray(Charset charset) {
+        return message.getBytes(charset);
     }
+
+    @Override
+    public String toString() {
+        return message;
+    }
+
 }
