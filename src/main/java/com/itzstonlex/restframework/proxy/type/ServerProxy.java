@@ -4,6 +4,7 @@ import com.itzstonlex.restframework.api.*;
 import com.itzstonlex.restframework.api.method.RequestMethod;
 import com.itzstonlex.restframework.api.request.RestRequest;
 import com.itzstonlex.restframework.api.request.RestRequestContext;
+import com.itzstonlex.restframework.api.response.Responses;
 import com.itzstonlex.restframework.api.response.RestResponse;
 import com.itzstonlex.restframework.util.RestUtilities;
 import com.sun.net.httpserver.HttpExchange;
@@ -206,7 +207,12 @@ public class ServerProxy implements MethodHandler {
                 sendResponse(exchange, invokeArgs);
             }
             catch (Throwable exception) {
-                RestUtilities.handleException(proxyInstance, exception, exceptionHandlersMap);
+
+                if (!RestUtilities.handleException(proxyInstance, exception, exceptionHandlersMap)) {
+                    if (RestUtilities.hasFlag(restFlagsTypes, RestFlag.Type.THROW_UNHANDLED_EXCEPTIONS)) {
+                        exception.printStackTrace();
+                    }
+                }
             }
         }
     }

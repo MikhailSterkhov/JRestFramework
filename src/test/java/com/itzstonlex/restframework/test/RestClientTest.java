@@ -3,7 +3,6 @@ package com.itzstonlex.restframework.test;
 import com.itzstonlex.restframework.api.*;
 import com.itzstonlex.restframework.api.method.Get;
 import com.itzstonlex.restframework.api.method.Post;
-import com.itzstonlex.restframework.api.response.JsonResponse;
 import com.itzstonlex.restframework.api.response.RestResponse;
 
 import java.io.IOException;
@@ -12,6 +11,7 @@ import java.util.List;
 @RestService
 @RestClient(url = "http://localhost:8082/api")
 @RestFlag(RestFlag.Type.ASYNC_REQUESTS)
+@RestFlag(RestFlag.Type.THROW_UNHANDLED_EXCEPTIONS)
 public interface RestClientTest {
 
     /**

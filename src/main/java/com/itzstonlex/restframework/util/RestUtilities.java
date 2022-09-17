@@ -220,15 +220,14 @@ public class RestUtilities {
     }
 
     @SneakyThrows
-    public void handleException(Object source, Throwable cause, Map<Class<? extends Throwable>, List<Method>> exceptionHandlersMap) {
+    public boolean handleException(Object source, Throwable cause, Map<Class<? extends Throwable>, List<Method>> exceptionHandlersMap) {
         Throwable throwable = cause;
         while (throwable.getCause() != null) {
             throwable = throwable.getCause();
         }
 
         if (exceptionHandlersMap.isEmpty()) {
-            throwable.printStackTrace();
-            return;
+            return false;
         }
 
         boolean founded = false;
@@ -256,6 +255,8 @@ public class RestUtilities {
                 }
             }
         }
+
+        return founded;
     }
 
     public boolean hasFlag(RestFlag.Type[] restFlagsTypes, RestFlag.Type flag) {

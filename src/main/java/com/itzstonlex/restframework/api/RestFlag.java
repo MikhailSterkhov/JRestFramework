@@ -15,5 +15,6 @@ public @interface RestFlag {
 
         DISALLOW_SIGNATURE,
         ASYNC_REQUESTS,
+        THROW_UNHANDLED_EXCEPTIONS,
     }
 }

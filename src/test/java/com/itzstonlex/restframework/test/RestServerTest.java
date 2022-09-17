@@ -6,7 +6,6 @@ import com.itzstonlex.restframework.api.method.Post;
 import com.itzstonlex.restframework.api.request.RestRequestContext;
 import com.itzstonlex.restframework.api.response.Responses;
 import com.itzstonlex.restframework.api.response.RestResponse;
-import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 
@@ -15,6 +14,7 @@ import java.util.stream.Collectors;
 
 @RestService
 @RestServer(host = "localhost", port = 8082, defaultContext = "/api")
+@RestFlag(RestFlag.Type.THROW_UNHANDLED_EXCEPTIONS)
 @RequiredArgsConstructor
 @FieldDefaults(makeFinal = true)
 public class RestServerTest {
@@ -49,7 +49,7 @@ public class RestServerTest {
     }
 
     @Post(context = "/adduser", timeout = 250)
-    public RestResponse onUserAdd(@NonNull RestRequestContext context) {
+    public RestResponse onUserAdd(@RestParam RestRequestContext context) {
         String tokenHeader = context.getFirstHeader(AUTH_TOKEN);
 
         if (tokenHeader == null || !tokenHeader.equals(TOKEN)) {

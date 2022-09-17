@@ -93,6 +93,16 @@ public class ClientProxy implements InvocationHandler {
 
         private Method method;
 
+        private RestResponse finallyException(Object proxy, Exception exception) {
+            if (!RestUtilities.handleException(proxy, exception, exceptionHandlersMap)) {
+                if (RestUtilities.hasFlag(restFlagsArray, RestFlag.Type.THROW_UNHANDLED_EXCEPTIONS)) {
+                    exception.printStackTrace();
+                }
+            }
+
+            return Responses.fromMessage(Responses.INTERNAL_SERVER_ERROR, exception.getMessage());
+        }
+
         public CompletableFuture<Object> execute(Object proxy, Object[] args) {
             Supplier<Object> responseSupplier = () -> {
 
@@ -103,19 +113,17 @@ public class ClientProxy implements InvocationHandler {
                         fullLink += RestUtilities.makeLinkSignature(method, args);
                     }
                     catch (IOException exception) {
-                        RestUtilities.handleException(proxy, exception, exceptionHandlersMap);
-
-                        return Responses.fromMessage(Responses.INTERNAL_SERVER_ERROR, exception.getMessage());
+                        return finallyException(proxy, exception);
                     }
                 }
 
                 try (CloseableHttpClient httpClient = HttpClientBuilder.create().build()) {
                     RequestBuilder requestBuilder = RequestBuilder.copy(new BasicHttpRequest(request.getMethod(), fullLink));
 
-                    for (Header restHeader : headers) {
-                        org.apache.http.Header apacheHeader = new BasicHeader(restHeader.name(), restHeader.value());
+                    for (Header header : headers) {
+                        org.apache.http.Header apacheHeader = new BasicHeader(header.name(), header.value());
 
-                        switch (restHeader.operate()) {
+                        switch (header.operate()) {
                             case ADD: {
                                 requestBuilder.addHeader(apacheHeader);
                                 break;
@@ -142,9 +150,7 @@ public class ClientProxy implements InvocationHandler {
                             requestBuilder.setEntity(new StringEntity(message.getMessage()));
                         }
                         catch (UnsupportedEncodingException exception) {
-                            RestUtilities.handleException(proxy, exception, exceptionHandlersMap);
-
-                            return Responses.fromMessage(Responses.INTERNAL_SERVER_ERROR, exception.getMessage());
+                            return finallyException(proxy, exception);
                         }
                     }
 
@@ -152,9 +158,7 @@ public class ClientProxy implements InvocationHandler {
                     return makeMethodResponse(proxy, apacheResponse);
                 }
                 catch (IOException exception) {
-                    RestUtilities.handleException(proxy, exception, exceptionHandlersMap);
-
-                    return Responses.fromMessage(Responses.INTERNAL_SERVER_ERROR, exception.getMessage());
+                    return finallyException(proxy, exception);
                 }
             };
 
@@ -175,9 +179,7 @@ public class ClientProxy implements InvocationHandler {
                 return Responses.fromMessage(apacheResponse.getStatusLine().getStatusCode(), new String(arr, 0, arr.length));
             }
             catch (Exception exception) {
-                RestUtilities.handleException(proxy, exception, exceptionHandlersMap);
-
-                return Responses.fromMessage(Responses.INTERNAL_SERVER_ERROR, exception.getMessage());
+                return finallyException(proxy, exception);
             }
         }
 
