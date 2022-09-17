@@ -25,10 +25,7 @@ import java.io.OutputStream;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.net.InetSocketAddress;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.TimeoutException;
 
 @FieldDefaults(makeFinal = true)
@@ -101,7 +98,6 @@ public class ServerProxy implements MethodHandler {
     @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
     private class ExchangedMethod implements HttpHandler {
 
-        // todo - apply flags.
         private RestFlag.Type[] restFlagsTypes;
 
         private RestRequest request;
@@ -210,11 +206,12 @@ public class ServerProxy implements MethodHandler {
                 sendResponse(exchange, invokeArgs);
             }
             catch (Throwable exception) {
+                Throwable lastCause = RestUtilities.getLastCause(exception);
 
-                if (!RestUtilities.handleException(proxyInstance, exception, exceptionHandlersMap)) {
+                if (!RestUtilities.handleException(proxyInstance, lastCause, exceptionHandlersMap)) {
 
                     if (RestUtilities.hasFlag(restFlagsTypes, RestFlag.Type.THROW_UNHANDLED_EXCEPTIONS)) {
-                        exception.printStackTrace();
+                        lastCause.printStackTrace();
                     }
                 }
             }

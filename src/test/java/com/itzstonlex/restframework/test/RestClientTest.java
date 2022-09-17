@@ -5,7 +5,6 @@ import com.itzstonlex.restframework.api.method.Get;
 import com.itzstonlex.restframework.api.method.Post;
 import com.itzstonlex.restframework.api.response.RestResponse;
 
-import java.io.IOException;
 import java.util.List;
 
 @RestService

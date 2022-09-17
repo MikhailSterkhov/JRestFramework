@@ -89,8 +89,6 @@ import com.itzstonlex.restframework.api.method.Post;
 import com.itzstonlex.restframework.api.request.RestRequestContext;
 import com.itzstonlex.restframework.api.response.Responses;
 import com.itzstonlex.restframework.api.response.RestResponse;
-import lombok.RequiredArgsConstructor;
-import lombok.experimental.FieldDefaults;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -100,8 +98,10 @@ import java.util.stream.Collectors;
 @RestFlag(RestFlag.Type.THROW_UNHANDLED_EXCEPTIONS)
 public class RestServerTest {
 
-    private static final int NOT_FOUND_ERR = Responses.BAD_REQUEST + 4;
-    private static final String AUTH_TOKEN = "Auth-Token", TOKEN = "TestToken123";
+    private static final int NOT_FOUND_ERR = (Responses.BAD_REQUEST + 4);
+    
+    private static final String TOKEN_HEADER = "Auth-Token", 
+                                TOKEN = "TestToken123";
 
     private final List<Userdata> userdataList;
     
@@ -136,10 +136,10 @@ public class RestServerTest {
 
     @Post(context = "/adduser", timeout = 250)
     public RestResponse onUserAdd(@RestParam RestRequestContext context) {
-        String tokenHeader = context.getFirstHeader(AUTH_TOKEN);
+        String tokenHeader = context.getFirstHeader(TOKEN_HEADER);
 
         if (tokenHeader == null || !tokenHeader.equals(TOKEN)) {
-            throw new IllegalArgumentException(AUTH_TOKEN);
+            throw new IllegalArgumentException(TOKEN_HEADER);
         }
 
         RestBody message = context.getBody();

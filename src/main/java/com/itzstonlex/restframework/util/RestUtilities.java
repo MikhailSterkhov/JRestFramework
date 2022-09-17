@@ -126,13 +126,18 @@ public class RestUtilities {
     }
 
     public RestFlag[] getFlagsAnnotations(Class<?> declaringClass) {
-        Class<MultipleRestFlags> annotationType = MultipleRestFlags.class;
+        Class<MultipleRestFlags> multiAnnotationType = MultipleRestFlags.class;
+        Class<RestFlag> singleAnnotationType = RestFlag.class;
 
-        if (!declaringClass.isAnnotationPresent(annotationType)) {
-            return new RestFlag[0];
+        if (!declaringClass.isAnnotationPresent(multiAnnotationType)) {
+            if (!declaringClass.isAnnotationPresent(singleAnnotationType)) {
+                return new RestFlag[0];
+            }
+
+            return new RestFlag[]{declaringClass.getDeclaredAnnotation(singleAnnotationType)};
         }
 
-        return declaringClass.getDeclaredAnnotation(annotationType).value();
+        return declaringClass.getDeclaredAnnotation(multiAnnotationType).value();
     }
 
     public Header[] getHeaders(Method method) {
@@ -219,13 +224,17 @@ public class RestUtilities {
         return stringBuilder.toString();
     }
 
-    @SneakyThrows
-    public boolean handleException(Object source, Throwable cause, Map<Class<? extends Throwable>, List<Method>> exceptionHandlersMap) {
+    public Throwable getLastCause(Throwable cause) {
         Throwable throwable = cause;
         while (throwable.getCause() != null) {
             throwable = throwable.getCause();
         }
 
+        return throwable;
+    }
+
+    @SneakyThrows
+    public boolean handleException(Object source, Throwable throwable, Map<Class<? extends Throwable>, List<Method>> exceptionHandlersMap) {
         if (exceptionHandlersMap.isEmpty()) {
             return false;
         }

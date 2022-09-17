@@ -19,8 +19,10 @@ import java.util.stream.Collectors;
 @FieldDefaults(makeFinal = true)
 public class RestServerTest {
 
-    private static final int NOT_FOUND_ERR = Responses.BAD_REQUEST + 4;
-    private static final String AUTH_TOKEN = "Auth-Token", TOKEN = "TestToken123";
+    private static final int NOT_FOUND_ERR = (Responses.BAD_REQUEST + 4);
+
+    private static final String TOKEN_HEADER = "Auth-Token",
+                                TOKEN = "TestToken123";
 
     private List<Userdata> userdataList;
 
@@ -50,10 +52,10 @@ public class RestServerTest {
 
     @Post(context = "/adduser", timeout = 250)
     public RestResponse onUserAdd(@RestParam RestRequestContext context) {
-        String tokenHeader = context.getFirstHeader(AUTH_TOKEN);
+        String tokenHeader = context.getFirstHeader(TOKEN_HEADER);
 
         if (tokenHeader == null || !tokenHeader.equals(TOKEN)) {
-            throw new IllegalArgumentException(AUTH_TOKEN);
+            throw new IllegalArgumentException(TOKEN_HEADER);
         }
 
         RestBody message = context.getBody();
@@ -68,4 +70,5 @@ public class RestServerTest {
     public void onExceptionThrow(IllegalArgumentException exception) {
         System.out.println("Wrong authentication token!");
     }
+
 }

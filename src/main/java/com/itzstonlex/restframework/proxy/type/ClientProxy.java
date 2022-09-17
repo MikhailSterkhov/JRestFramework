@@ -96,14 +96,16 @@ public class ClientProxy implements InvocationHandler {
         private Method method;
 
         private RestResponse finallyException(Object proxy, Exception exception) {
-            if (!RestUtilities.handleException(proxy, exception, exceptionHandlersMap)) {
+            Throwable lastCause = RestUtilities.getLastCause(exception);
+
+            if (!RestUtilities.handleException(proxy, lastCause, exceptionHandlersMap)) {
 
                 if (RestUtilities.hasFlag(restFlagsArray, RestFlag.Type.THROW_UNHANDLED_EXCEPTIONS)) {
-                    exception.printStackTrace();
+                    lastCause.printStackTrace();
                 }
             }
 
-            return Responses.fromMessage(Responses.INTERNAL_SERVER_ERROR, exception.getMessage());
+            return Responses.fromMessage(Responses.INTERNAL_SERVER_ERROR, lastCause.getMessage());
         }
 
         public CompletableFuture<Object> execute(Object proxy, Object[] args) {
