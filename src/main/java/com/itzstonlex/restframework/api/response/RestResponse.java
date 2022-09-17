@@ -39,14 +39,16 @@ public class RestResponse {
         return new RestResponse(statusCode, responseMessage, url, null, null);
     }
 
+    private static String convertBody(Object bodyObject) {
+        return bodyObject instanceof String ? bodyObject.toString() : RestUtilities.GSON.toJson(bodyObject);
+    }
+
     public static RestResponse create(int statusCode, String responseMessage, String url, Object body) {
-        String bodyMessage = body instanceof String ? body.toString() : RestUtilities.GSON.toJson(body);
-        return new RestResponse(statusCode, responseMessage, url, bodyMessage, null);
+        return new RestResponse(statusCode, responseMessage, url, convertBody(body), null);
     }
 
     public static RestResponse create(int statusCode, String responseMessage, String url, Object body, String method) {
-        String bodyMessage = body instanceof String ? body.toString() : RestUtilities.GSON.toJson(body);
-        return new RestResponse(statusCode, responseMessage, url, bodyMessage, method);
+        return new RestResponse(statusCode, responseMessage, url, convertBody(body), method);
     }
 
     public static RestResponse createOnlyBody(int statusCode, Object body) {
