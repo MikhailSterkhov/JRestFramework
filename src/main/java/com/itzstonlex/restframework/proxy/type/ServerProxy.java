@@ -1,10 +1,11 @@
 package com.itzstonlex.restframework.proxy.type;
 
-import com.itzstonlex.restframework.api.*;
-import com.itzstonlex.restframework.api.method.RequestMethod;
+import com.itzstonlex.restframework.api.RestBody;
+import com.itzstonlex.restframework.api.RestFlag;
+import com.itzstonlex.restframework.api.RestParam;
+import com.itzstonlex.restframework.api.RestServer;
 import com.itzstonlex.restframework.api.request.RestRequest;
 import com.itzstonlex.restframework.api.request.RestRequestContext;
-import com.itzstonlex.restframework.api.response.Responses;
 import com.itzstonlex.restframework.api.response.RestResponse;
 import com.itzstonlex.restframework.util.RestUtilities;
 import com.sun.net.httpserver.HttpExchange;
@@ -21,11 +22,13 @@ import lombok.experimental.NonFinal;
 
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.net.InetSocketAddress;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeoutException;
 
 @FieldDefaults(makeFinal = true)
@@ -209,6 +212,7 @@ public class ServerProxy implements MethodHandler {
             catch (Throwable exception) {
 
                 if (!RestUtilities.handleException(proxyInstance, exception, exceptionHandlersMap)) {
+
                     if (RestUtilities.hasFlag(restFlagsTypes, RestFlag.Type.THROW_UNHANDLED_EXCEPTIONS)) {
                         exception.printStackTrace();
                     }

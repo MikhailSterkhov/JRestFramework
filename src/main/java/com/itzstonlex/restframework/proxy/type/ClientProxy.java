@@ -23,7 +23,9 @@ import java.io.UnsupportedEncodingException;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Supplier;
 
@@ -95,6 +97,7 @@ public class ClientProxy implements InvocationHandler {
 
         private RestResponse finallyException(Object proxy, Exception exception) {
             if (!RestUtilities.handleException(proxy, exception, exceptionHandlersMap)) {
+
                 if (RestUtilities.hasFlag(restFlagsArray, RestFlag.Type.THROW_UNHANDLED_EXCEPTIONS)) {
                     exception.printStackTrace();
                 }
@@ -112,7 +115,7 @@ public class ClientProxy implements InvocationHandler {
                     try {
                         fullLink += RestUtilities.makeLinkSignature(method, args);
                     }
-                    catch (IOException exception) {
+                    catch (UnsupportedEncodingException exception) {
                         return finallyException(proxy, exception);
                     }
                 }
@@ -146,18 +149,13 @@ public class ClientProxy implements InvocationHandler {
                             throw new NullPointerException(method + " - request message is null");
                         }
 
-                        try {
-                            requestBuilder.setEntity(new StringEntity(message.getMessage()));
-                        }
-                        catch (UnsupportedEncodingException exception) {
-                            return finallyException(proxy, exception);
-                        }
+                        requestBuilder.setEntity(new StringEntity(message.getMessage()));
                     }
 
                     CloseableHttpResponse apacheResponse = httpClient.execute(requestBuilder.build());
                     return makeMethodResponse(proxy, apacheResponse);
                 }
-                catch (IOException exception) {
+                catch (Exception exception) {
                     return finallyException(proxy, exception);
                 }
             };
@@ -170,7 +168,8 @@ public class ClientProxy implements InvocationHandler {
         }
 
         @SuppressWarnings("ResultOfMethodCallIgnored")
-        public RestResponse makeResponse(Object proxy, CloseableHttpResponse apacheResponse) {
+        public RestResponse makeResponse(Object proxy, CloseableHttpResponse apacheResponse)
+        throws Exception {
             try (InputStream inputStream = apacheResponse.getEntity().getContent()) {
 
                 byte[] arr = new byte[(int) apacheResponse.getEntity().getContentLength()];
@@ -178,12 +177,10 @@ public class ClientProxy implements InvocationHandler {
 
                 return Responses.fromMessage(apacheResponse.getStatusLine().getStatusCode(), new String(arr, 0, arr.length));
             }
-            catch (Exception exception) {
-                return finallyException(proxy, exception);
-            }
         }
 
-        public Object makeMethodResponse(Object proxy, CloseableHttpResponse apacheResponse) {
+        public Object makeMethodResponse(Object proxy, CloseableHttpResponse apacheResponse)
+        throws Exception {
             RestResponse response = makeResponse(proxy, apacheResponse);
 
             Class<?> returnType = this.method.getReturnType();

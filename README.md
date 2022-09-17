@@ -35,14 +35,6 @@ import com.itzstonlex.restframework.api.response.RestResponse;
 public interface RestClientTest {
 
     /**
-     * Handling of exceptions.
-     *
-     * @param exception - Thrown exception.
-     */
-    @RestExceptionHandler
-    void handle(IOException exception);
-
-    /**
      * This function automatically converts the received JSON into
      * the object specified in the return object type of this function (Userdata)
      *
