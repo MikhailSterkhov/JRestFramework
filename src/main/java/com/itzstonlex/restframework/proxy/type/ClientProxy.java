@@ -10,6 +10,7 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.apache.http.HttpEntity;
+import org.apache.http.client.HttpClient;
 import org.apache.http.client.entity.DecompressingEntity;
 import org.apache.http.client.entity.EntityBuilder;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -37,11 +38,14 @@ public class ClientProxy implements InvocationHandler {
 
     @SuppressWarnings("unchecked")
     public static <T> T wrap(ClassLoader classLoader, Class<T> providerInterface) {
-        return (T) Proxy.newProxyInstance(classLoader, new Class[]{providerInterface}, new ClientProxy(providerInterface));
+        return (T) Proxy.newProxyInstance(classLoader, new Class[]{providerInterface},
+                new ClientProxy(providerInterface));
     }
 
     private Map<String, ExecutableMethod> executionsMap = new HashMap<>();
     private Map<Class<? extends Throwable>, List<Method>> exceptionHandlersMap = new HashMap<>();
+
+    private CloseableHttpClient httpClient = HttpClientBuilder.create().build();
 
     private ClientProxy(Class<?> interfaceClass) {
         RestClient restClient = RestUtilities.getClientAnnotation(interfaceClass);
@@ -125,7 +129,7 @@ public class ClientProxy implements InvocationHandler {
                     }
                 }
 
-                try (CloseableHttpClient httpClient = HttpClientBuilder.create().build()) {
+                try {
                     RequestBuilder requestBuilder = RequestBuilder.copy(new BasicHttpRequest(request.getMethod(), fullLink));
 
                     for (Header header : headers) {
@@ -157,8 +161,9 @@ public class ClientProxy implements InvocationHandler {
                         requestBuilder.setEntity(new StringEntity(restBody.getMessage()));
                     }
 
-                    CloseableHttpResponse apacheResponse = httpClient.execute(requestBuilder.build());
-                    return makeMethodResponse(apacheResponse);
+                    try (CloseableHttpResponse apacheResponse = httpClient.execute(requestBuilder.build())) {
+                        return makeMethodResponse(apacheResponse);
+                    }
                 }
                 catch (Exception exception) {
                     return finallyException(proxy, exception);
