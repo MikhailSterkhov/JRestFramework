@@ -29,7 +29,6 @@ public class RealLifeBootstrap {
 
         CatFactsApi catFactsApi = rest.get(CatFactsApi.class);
 
-        // print 10 facts of cats.
         for (int i = 0; i < 10; i++) {
             System.out.println(catFactsApi.getFactResponse());
         }
