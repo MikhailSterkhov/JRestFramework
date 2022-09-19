@@ -23,6 +23,7 @@ A simple example of REST-client structure:
 
 ```java
 import com.itzstonlex.restframework.api.*;
+import com.itzstonlex.restframework.api.authentication.RestAuthentication;
 import com.itzstonlex.restframework.api.method.Get;
 import com.itzstonlex.restframework.api.method.Post;
 import com.itzstonlex.restframework.api.RestBody;
@@ -30,6 +31,7 @@ import com.itzstonlex.restframework.api.response.RestResponse;
 
 @RestService
 @RestClient(url = "http://localhost:8082/api")
+@RestAuthentication(username = "admin", password = "password")
 @RestFlag(RestFlag.Type.ASYNC_REQUESTS)
 @RestFlag(RestFlag.Type.THROW_UNHANDLED_EXCEPTIONS)
 public interface RestClientTest {
@@ -84,6 +86,7 @@ A simple example of REST-server structure:
 
 ```java
 import com.itzstonlex.restframework.api.*;
+import com.itzstonlex.restframework.api.authentication.RestAuthentication;
 import com.itzstonlex.restframework.api.method.Get;
 import com.itzstonlex.restframework.api.method.Post;
 import com.itzstonlex.restframework.api.request.RestRequestContext;
@@ -95,16 +98,17 @@ import java.util.stream.Collectors;
 
 @RestService
 @RestServer(host = "localhost", port = 8082, defaultContext = "/api")
+@RestAuthentication(username = "admin", password = "password")
 @RestFlag(RestFlag.Type.THROW_UNHANDLED_EXCEPTIONS)
 public class RestServerTest {
 
     private static final int NOT_FOUND_ERR = (Responses.BAD_REQUEST + 4);
-    
-    private static final String TOKEN_HEADER = "Auth-Token", 
-                                TOKEN = "TestToken123";
+
+    private static final String TOKEN_HEADER = "Auth-Token",
+            TOKEN = "TestToken123";
 
     private final List<Userdata> userdataList;
-    
+
     public RestServerTest(List<Userdata> userdataList) {
         this.userdataList = userdataList;
     }

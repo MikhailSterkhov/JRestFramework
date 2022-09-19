@@ -1,6 +1,7 @@
 package com.itzstonlex.restframework.proxy.type;
 
 import com.itzstonlex.restframework.api.*;
+import com.itzstonlex.restframework.api.authentication.RestAuthentication;
 import com.itzstonlex.restframework.api.request.RestRequest;
 import com.itzstonlex.restframework.api.response.Responses;
 import com.itzstonlex.restframework.api.response.RestResponse;
@@ -10,19 +11,19 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.apache.http.HttpEntity;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.entity.DecompressingEntity;
-import org.apache.http.client.entity.EntityBuilder;
+import org.apache.http.auth.AuthScope;
+import org.apache.http.auth.UsernamePasswordCredentials;
+import org.apache.http.client.CredentialsProvider;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.RequestBuilder;
 import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.message.BasicHeader;
 import org.apache.http.message.BasicHttpRequest;
 import org.apache.http.util.EntityUtils;
 
-import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
@@ -45,7 +46,7 @@ public class ClientProxy implements InvocationHandler {
     private Map<String, ExecutableMethod> executionsMap = new HashMap<>();
     private Map<Class<? extends Throwable>, List<Method>> exceptionHandlersMap = new HashMap<>();
 
-    private CloseableHttpClient httpClient = HttpClientBuilder.create().build();
+    private CloseableHttpClient httpClient;
 
     private ClientProxy(Class<?> interfaceClass) {
         RestClient restClient = RestUtilities.getClientAnnotation(interfaceClass);
@@ -54,6 +55,21 @@ public class ClientProxy implements InvocationHandler {
         if (restClient == null) {
             throw new RuntimeException("Annotation @RestClient not found for " + interfaceClass);
         }
+
+        HttpClientBuilder httpClientBuilder = HttpClientBuilder.create();
+
+        if (interfaceClass.isAnnotationPresent(RestAuthentication.class)) {
+            RestAuthentication authentication = interfaceClass.getDeclaredAnnotation(RestAuthentication.class);
+
+            CredentialsProvider provider = new BasicCredentialsProvider();
+            UsernamePasswordCredentials credentials
+                    = new UsernamePasswordCredentials(authentication.username(), authentication.password());
+
+            provider.setCredentials(AuthScope.ANY, credentials);
+            httpClientBuilder.setDefaultCredentialsProvider(provider);
+        }
+
+        httpClient = httpClientBuilder.build();
 
         for (Method method : interfaceClass.getDeclaredMethods()) {
             if (RestUtilities.checkAndSaveExceptionHandler(method, exceptionHandlersMap)) {

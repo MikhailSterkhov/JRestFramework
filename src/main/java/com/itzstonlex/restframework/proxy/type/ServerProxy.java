@@ -4,13 +4,13 @@ import com.itzstonlex.restframework.api.RestBody;
 import com.itzstonlex.restframework.api.RestFlag;
 import com.itzstonlex.restframework.api.RestParam;
 import com.itzstonlex.restframework.api.RestServer;
+import com.itzstonlex.restframework.api.authentication.BasicServletAuthenticator;
+import com.itzstonlex.restframework.api.authentication.RestAuthentication;
 import com.itzstonlex.restframework.api.request.RestRequest;
 import com.itzstonlex.restframework.api.request.RestRequestContext;
 import com.itzstonlex.restframework.api.response.RestResponse;
 import com.itzstonlex.restframework.util.RestUtilities;
-import com.sun.net.httpserver.HttpExchange;
-import com.sun.net.httpserver.HttpHandler;
-import com.sun.net.httpserver.HttpServer;
+import com.sun.net.httpserver.*;
 import javassist.util.proxy.MethodHandler;
 import javassist.util.proxy.ProxyFactory;
 import lombok.AccessLevel;
@@ -20,6 +20,7 @@ import lombok.SneakyThrows;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.NonFinal;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.reflect.Method;
@@ -33,6 +34,12 @@ import java.util.concurrent.TimeoutException;
 
 @FieldDefaults(makeFinal = true)
 public class ServerProxy implements MethodHandler {
+
+    private static Authenticator createAuthenticator(Class<?> serverSuperclass) {
+        return new BasicServletAuthenticator(
+                serverSuperclass.getDeclaredAnnotation(RestAuthentication.class), "RestServerRealm"
+        );
+    }
 
     @SuppressWarnings("unchecked")
     @SneakyThrows
@@ -80,8 +87,12 @@ public class ServerProxy implements MethodHandler {
                 RestRequest request = RestUtilities.newRestRequest(method);
                 String contextName = restServer.defaultContext() + request.getContext();
 
-                httpServer.createContext(contextName,
-                        new ExchangedMethod(RestUtilities.getRestFlagsTypes(restFlagsArray), request, contextName, method));
+                HttpContext context = httpServer.createContext(contextName);
+                context.setHandler(new ExchangedMethod(RestUtilities.getRestFlagsTypes(restFlagsArray), request, contextName, method));
+
+                if (serverSuperclass.isAnnotationPresent(RestAuthentication.class)) {
+                    context.setAuthenticator(createAuthenticator(serverSuperclass));
+                }
             }
 
             httpServer.bind(new InetSocketAddress(restServer.host(), restServer.port()), 10);
@@ -108,19 +119,25 @@ public class ServerProxy implements MethodHandler {
 
         private Method declaredMethod;
 
-        private void sendResponse(HttpExchange exchange, Object[] invokeArgs)
-        throws Exception {
+        private void sendResponse(HttpExchange exchange, int statusCode, byte[] responseBytes)
+        throws IOException {
 
-            RestResponse response = (RestResponse) declaredMethod.invoke(proxyInstance, invokeArgs);
-            byte[] responseBytes = response.getBody().getAsByteArray();
-
-            exchange.sendResponseHeaders(response.getStatusCode(), responseBytes.length);
+            exchange.sendResponseHeaders(statusCode, responseBytes.length);
 
             try (OutputStream responseBody = exchange.getResponseBody()) {
 
                 responseBody.write(responseBytes);
                 responseBody.flush();
             }
+        }
+
+        private void sendResponse(HttpExchange exchange, Object[] invokeArgs)
+        throws Exception {
+
+            RestResponse response = (RestResponse) declaredMethod.invoke(proxyInstance, invokeArgs);
+            byte[] responseBytes = response.getBody().getAsByteArray();
+
+            sendResponse(exchange, response.getStatusCode(), responseBytes);
         }
 
         @SuppressWarnings("ResultOfMethodCallIgnored")
@@ -189,11 +206,25 @@ public class ServerProxy implements MethodHandler {
         }
 
         @Override
-        public void handle(HttpExchange exchange) {
+        public void handle(HttpExchange exchange)
+        throws IOException {
+
             String requestContext = exchange.getRequestURI().toString();
 
+            Authenticator authenticator = exchange.getHttpContext().getAuthenticator();
+
+            if (authenticator != null) {
+                Authenticator.Result result = authenticator.authenticate(exchange);
+
+
+
+                if (!(result instanceof Authenticator.Success)) {
+                    sendResponse(exchange, 403, "Wrong authentication credentials".getBytes());
+                }
+            }
+
             if (!requestContext.split("\\?")[0].endsWith(restContext) || !request.getMethod().equalsIgnoreCase(exchange.getRequestMethod())) {
-                exchange.close();
+                sendResponse(exchange, 404, restContext.getBytes());
                 return;
             }
 
@@ -209,6 +240,7 @@ public class ServerProxy implements MethodHandler {
                 sendResponse(exchange, invokeArgs);
             }
             catch (Throwable exception) {
+                sendResponse(exchange, 500, exception.getMessage().getBytes());
                 Throwable lastCause = RestUtilities.getLastCause(exception);
 
                 if (!RestUtilities.handleException(proxyInstance, lastCause, exceptionHandlersMap)) {

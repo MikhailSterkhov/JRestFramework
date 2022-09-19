@@ -1,6 +1,7 @@
 package com.itzstonlex.restframework.test;
 
 import com.itzstonlex.restframework.api.*;
+import com.itzstonlex.restframework.api.authentication.RestAuthentication;
 import com.itzstonlex.restframework.api.method.Get;
 import com.itzstonlex.restframework.api.method.Post;
 import com.itzstonlex.restframework.api.request.RestRequestContext;
@@ -14,6 +15,7 @@ import java.util.stream.Collectors;
 
 @RestService
 @RestServer(host = "localhost", port = 8082, defaultContext = "/api")
+@RestAuthentication(username = "admin", password = "password")
 @RestFlag(RestFlag.Type.THROW_UNHANDLED_EXCEPTIONS)
 @RequiredArgsConstructor
 @FieldDefaults(makeFinal = true)
