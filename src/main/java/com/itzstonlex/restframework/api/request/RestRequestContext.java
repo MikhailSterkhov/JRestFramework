@@ -8,7 +8,6 @@ import lombok.experimental.NonFinal;
 
 import java.util.List;
 
-@Getter
 @Setter
 @ToString
 @EqualsAndHashCode
@@ -20,12 +19,15 @@ public class RestRequestContext {
         return new RestRequestContext(method, resourceName);
     }
 
+    @Getter
     private String method, resourceName;
 
-    private Headers headers = new Headers();
-
     @NonFinal
+    @Getter
     private RestBody body;
+
+    @Getter
+    private Headers headers = new Headers();
 
     public List<String> getHeaders(String name) {
         return headers.get(name);

@@ -1,7 +1,9 @@
 package com.itzstonlex.restframework.test;
 
 import com.itzstonlex.restframework.api.*;
+import com.itzstonlex.restframework.api.authentication.RestAuthResult;
 import com.itzstonlex.restframework.api.authentication.RestAuthentication;
+import com.itzstonlex.restframework.api.authentication.RestAuthenticationResult;
 import com.itzstonlex.restframework.api.method.Get;
 import com.itzstonlex.restframework.api.method.Post;
 import com.itzstonlex.restframework.api.request.RestRequestContext;
@@ -71,6 +73,22 @@ public class RestServerTest {
     @RestExceptionHandler
     public void onExceptionThrow(IllegalArgumentException exception) {
         System.out.println("Wrong authentication token!");
+    }
+
+    @RestAuthenticationResult
+    public void onAuthResult(RestAuthResult result) {
+        switch (result) {
+
+            case SUCCESS: {
+                System.out.println("[Server] Success authorized!");
+                break;
+            }
+
+            case FAILURE: {
+                System.out.println("[Server] Forbidden");
+                break;
+            }
+        }
     }
 
 }

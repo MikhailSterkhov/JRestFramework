@@ -10,7 +10,9 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import lombok.experimental.NonFinal;
 import org.apache.http.HttpEntity;
+import org.apache.http.HttpHeaders;
 import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.UsernamePasswordCredentials;
 import org.apache.http.client.CredentialsProvider;
@@ -28,6 +30,7 @@ import java.io.UnsupportedEncodingException;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
+import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -43,10 +46,13 @@ public class ClientProxy implements InvocationHandler {
                 new ClientProxy(providerInterface));
     }
 
-    private Map<String, ExecutableMethod> executionsMap = new HashMap<>();
     private Map<Class<? extends Throwable>, List<Method>> exceptionHandlersMap = new HashMap<>();
+    private Map<String, ExecutableMethod> executionsMap = new HashMap<>();
 
     private CloseableHttpClient httpClient;
+
+    @NonFinal
+    private UsernamePasswordCredentials credentials;
 
     private ClientProxy(Class<?> interfaceClass) {
         RestClient restClient = RestUtilities.getClientAnnotation(interfaceClass);
@@ -56,22 +62,16 @@ public class ClientProxy implements InvocationHandler {
             throw new RuntimeException("Annotation @RestClient not found for " + interfaceClass);
         }
 
-        HttpClientBuilder httpClientBuilder = HttpClientBuilder.create();
+        httpClient = HttpClientBuilder.create().build();
 
         if (interfaceClass.isAnnotationPresent(RestAuthentication.class)) {
+
             RestAuthentication authentication = interfaceClass.getDeclaredAnnotation(RestAuthentication.class);
-
-            CredentialsProvider provider = new BasicCredentialsProvider();
-            UsernamePasswordCredentials credentials
-                    = new UsernamePasswordCredentials(authentication.username(), authentication.password());
-
-            provider.setCredentials(AuthScope.ANY, credentials);
-            httpClientBuilder.setDefaultCredentialsProvider(provider);
+            credentials = new UsernamePasswordCredentials(authentication.username(), authentication.password());
         }
 
-        httpClient = httpClientBuilder.build();
-
         for (Method method : interfaceClass.getDeclaredMethods()) {
+
             if (RestUtilities.checkAndSaveExceptionHandler(method, exceptionHandlersMap)) {
                 continue;
             }
@@ -147,6 +147,12 @@ public class ClientProxy implements InvocationHandler {
 
                 try {
                     RequestBuilder requestBuilder = RequestBuilder.copy(new BasicHttpRequest(request.getMethod(), fullLink));
+
+                    if (credentials != null) {
+
+                        String encoding = Base64.getEncoder().encodeToString((credentials.getUserName() + ":" + credentials.getPassword()).getBytes());
+                        requestBuilder.setHeader(HttpHeaders.AUTHORIZATION, "Basic " + encoding);
+                    }
 
                     for (Header header : headers) {
                         org.apache.http.Header apacheHeader = new BasicHeader(header.name(), header.value());

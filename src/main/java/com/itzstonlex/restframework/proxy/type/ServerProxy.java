@@ -5,7 +5,9 @@ import com.itzstonlex.restframework.api.RestFlag;
 import com.itzstonlex.restframework.api.RestParam;
 import com.itzstonlex.restframework.api.RestServer;
 import com.itzstonlex.restframework.api.authentication.BasicServletAuthenticator;
+import com.itzstonlex.restframework.api.authentication.RestAuthResult;
 import com.itzstonlex.restframework.api.authentication.RestAuthentication;
+import com.itzstonlex.restframework.api.authentication.RestAuthenticationResult;
 import com.itzstonlex.restframework.api.request.RestRequest;
 import com.itzstonlex.restframework.api.request.RestRequestContext;
 import com.itzstonlex.restframework.api.response.RestResponse;
@@ -26,10 +28,7 @@ import java.io.OutputStream;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.net.InetSocketAddress;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.TimeoutException;
 
 @FieldDefaults(makeFinal = true)
@@ -60,6 +59,12 @@ public class ServerProxy implements MethodHandler {
 
     private Map<Class<? extends Throwable>, List<Method>> exceptionHandlersMap = new HashMap<>();
 
+    @NonFinal
+    private Authenticator authenticator;
+
+    @NonFinal
+    private Set<Method> authenticationHandlersSet;
+
     @Setter(AccessLevel.PRIVATE)
     @NonFinal
     private Object proxyInstance;
@@ -75,8 +80,19 @@ public class ServerProxy implements MethodHandler {
         try {
             HttpServer httpServer = HttpServer.create();
 
+            if (serverSuperclass.isAnnotationPresent(RestAuthentication.class)) {
+
+                authenticator = createAuthenticator(serverSuperclass);
+                authenticationHandlersSet = new HashSet<>();
+            }
+
             for (Method method : serverSuperclass.getDeclaredMethods()) {
                 if (RestUtilities.checkAndSaveExceptionHandler(method, exceptionHandlersMap)) {
+                    continue;
+                }
+
+                if (authenticator != null && method.isAnnotationPresent(RestAuthenticationResult.class)) {
+                    authenticationHandlersSet.add(method);
                     continue;
                 }
 
@@ -89,10 +105,6 @@ public class ServerProxy implements MethodHandler {
 
                 HttpContext context = httpServer.createContext(contextName);
                 context.setHandler(new ExchangedMethod(RestUtilities.getRestFlagsTypes(restFlagsArray), request, contextName, method));
-
-                if (serverSuperclass.isAnnotationPresent(RestAuthentication.class)) {
-                    context.setAuthenticator(createAuthenticator(serverSuperclass));
-                }
             }
 
             httpServer.bind(new InetSocketAddress(restServer.host(), restServer.port()), 10);
@@ -209,26 +221,28 @@ public class ServerProxy implements MethodHandler {
         public void handle(HttpExchange exchange)
         throws IOException {
 
-            String requestContext = exchange.getRequestURI().toString();
-
-            Authenticator authenticator = exchange.getHttpContext().getAuthenticator();
-
-            if (authenticator != null) {
-                Authenticator.Result result = authenticator.authenticate(exchange);
-
-
-
-                if (!(result instanceof Authenticator.Success)) {
-                    sendResponse(exchange, 403, "Wrong authentication credentials".getBytes());
-                }
-            }
-
-            if (!requestContext.split("\\?")[0].endsWith(restContext) || !request.getMethod().equalsIgnoreCase(exchange.getRequestMethod())) {
-                sendResponse(exchange, 404, restContext.getBytes());
-                return;
-            }
-
             try {
+                String requestContext = exchange.getRequestURI().toString();
+
+                if (authenticator != null) {
+                    Authenticator.Result result = authenticator.authenticate(exchange);
+
+                    boolean isSuccess = result instanceof Authenticator.Success;
+
+                    for (Method authResultHandler : authenticationHandlersSet) {
+                        authResultHandler.invoke(proxyInstance, RestAuthResult.parse(isSuccess));
+                    }
+
+                    if (!isSuccess) {
+                        sendResponse(exchange, 403, "Wrong authentication credentials".getBytes());
+                        return;
+                    }
+                }
+
+                if (!requestContext.split("\\?")[0].endsWith(restContext) || !request.getMethod().equalsIgnoreCase(exchange.getRequestMethod())) {
+                    sendResponse(exchange, 404, restContext.getBytes());
+                    return;
+                }
                 long startTime = System.currentTimeMillis();
 
                 Object[] invokeArgs = createMethodArgumentsList(requestContext, exchange).toArray();
