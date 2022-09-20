@@ -32,7 +32,7 @@ import com.itzstonlex.restframework.api.context.response.RestResponse;
 @RestService
 @RestClient(url = "http://localhost:8082/api")
 @RestAuthentication(username = "admin", password = "password")
-@RestOption(RestOption.Type.ASYNC_REQUESTS)
+@RestOption(RestOption.Type.ASYNCHRONOUS)
 @RestOption(RestOption.Type.THROW_UNHANDLED_EXCEPTIONS)
 public interface RestClientTest {
 
@@ -102,6 +102,7 @@ import java.util.stream.Collectors;
 @RestService
 @RestServer(host = "localhost", port = 8082, defaultContext = "/api")
 @RestAuthentication(username = "admin", password = "password")
+@RestOption(RestOption.Type.ASYNCHRONOUS)
 @RestOption(RestOption.Type.THROW_UNHANDLED_EXCEPTIONS)
 public class RestServerTest {
 

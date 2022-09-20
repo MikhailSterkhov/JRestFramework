@@ -33,10 +33,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.function.Supplier;
 
 @FieldDefaults(makeFinal = true)
 public class ClientProxy implements InvocationHandler {
+
+    private static final ExecutorService THREADS_POOL = Executors.newCachedThreadPool();
 
     /**
      * Wrapping the client REST service in Proxy
@@ -138,7 +142,7 @@ public class ClientProxy implements InvocationHandler {
 
             if (!RestUtilities.handleException(proxy, lastCause, exceptionHandlersMap)) {
 
-                if (RestUtilities.hasFlag(options, RestOption.Type.THROW_UNHANDLED_EXCEPTIONS)) {
+                if (RestUtilities.containsOption(options, RestOption.Type.THROW_UNHANDLED_EXCEPTIONS)) {
                     lastCause.printStackTrace();
                 }
             }
@@ -198,7 +202,7 @@ public class ClientProxy implements InvocationHandler {
 
                 String fullLink = clientAnnotation.url() + signature.getUri();
 
-                if (!RestUtilities.hasFlag(options, RestOption.Type.DISALLOW_SIGNATURE) && signature.isUseSignature()) {
+                if (!RestUtilities.containsOption(options, RestOption.Type.DISALLOW_SIGNATURE) && signature.isUseSignature()) {
                     try {
                         fullLink += RestUtilities.makeLinkSignature(declaredMethod, args);
                     }
@@ -254,8 +258,8 @@ public class ClientProxy implements InvocationHandler {
                 }
             };
 
-            if (RestUtilities.hasFlag(options, RestOption.Type.ASYNC_REQUESTS)) {
-                return CompletableFuture.supplyAsync(responseSupplier);
+            if (RestUtilities.containsOption(options, RestOption.Type.ASYNCHRONOUS)) {
+                return CompletableFuture.supplyAsync(responseSupplier, THREADS_POOL);
             }
 
             return CompletableFuture.completedFuture(responseSupplier.get());

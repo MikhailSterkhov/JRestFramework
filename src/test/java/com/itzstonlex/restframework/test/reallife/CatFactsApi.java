@@ -8,7 +8,7 @@ import com.itzstonlex.restframework.api.context.response.RestResponse;
 
 @RestService
 @RestClient(url = "https://catfact.ninja")
-@RestOption(RestOption.Type.ASYNC_REQUESTS)
+@RestOption(RestOption.Type.ASYNCHRONOUS)
 @RestOption(RestOption.Type.THROW_UNHANDLED_EXCEPTIONS)
 public interface CatFactsApi {
 

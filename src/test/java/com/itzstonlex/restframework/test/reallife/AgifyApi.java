@@ -14,7 +14,7 @@ import lombok.experimental.FieldDefaults;
 
 @RestService
 @RestClient(url = "https://api.agify.io")
-@RestOption(RestOption.Type.ASYNC_REQUESTS)
+@RestOption(RestOption.Type.ASYNCHRONOUS)
 @RestOption(RestOption.Type.THROW_UNHANDLED_EXCEPTIONS)
 public interface AgifyApi {
 

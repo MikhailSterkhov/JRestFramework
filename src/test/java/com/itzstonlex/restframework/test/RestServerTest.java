@@ -19,6 +19,7 @@ import java.util.stream.Collectors;
 @RestService
 @RestServer(host = "localhost", port = 8082, defaultContext = "/api")
 @RestAuthentication(username = "admin", password = "password")
+@RestOption(RestOption.Type.ASYNCHRONOUS)
 @RestOption(RestOption.Type.THROW_UNHANDLED_EXCEPTIONS)
 @RequiredArgsConstructor
 @FieldDefaults(makeFinal = true)

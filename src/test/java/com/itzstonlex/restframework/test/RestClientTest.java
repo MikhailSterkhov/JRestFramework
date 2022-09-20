@@ -12,7 +12,7 @@ import java.util.List;
 @RestService
 @RestClient(url = "http://localhost:8082/api")
 @RestAuthentication(username = "admin", password = "password")
-@RestOption(RestOption.Type.ASYNC_REQUESTS)
+@RestOption(RestOption.Type.ASYNCHRONOUS)
 @RestOption(RestOption.Type.THROW_UNHANDLED_EXCEPTIONS)
 public interface RestClientTest {
 

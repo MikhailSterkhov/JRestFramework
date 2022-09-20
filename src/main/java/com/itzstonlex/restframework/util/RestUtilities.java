@@ -51,6 +51,10 @@ public class RestUtilities {
         return REQUEST_ANNOTATIONS_TYPES.get(annotation.annotationType()).apply(annotation);
     }
 
+    public boolean containsOption(RestOption.Type[] optionsArray, RestOption.Type target) {
+        return Arrays.asList(optionsArray).contains(target);
+    }
+
     public RestRequestSignature newRequestByAnnotationType(@NonNull Request request) {
         return new RestRequestSignature(request.method(), request.context(),
                 request.timeout(), request.useSignature());
@@ -267,10 +271,6 @@ public class RestUtilities {
         }
 
         return founded;
-    }
-
-    public boolean hasFlag(RestOption.Type[] restFlagsTypes, RestOption.Type flag) {
-        return Arrays.asList(restFlagsTypes).contains(flag);
     }
 
 }

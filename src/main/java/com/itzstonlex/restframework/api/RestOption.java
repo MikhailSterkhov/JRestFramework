@@ -14,7 +14,7 @@ public @interface RestOption {
     enum Type {
 
         DISALLOW_SIGNATURE,
-        ASYNC_REQUESTS,
+        ASYNCHRONOUS,
         THROW_UNHANDLED_EXCEPTIONS,
     }
 }

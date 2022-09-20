@@ -29,10 +29,14 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.net.InetSocketAddress;
 import java.util.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeoutException;
 
 @FieldDefaults(makeFinal = true)
 public class ServerProxy implements MethodHandler {
+
+    private static final ExecutorService THREADS_POOL = Executors.newCachedThreadPool();
 
     /**
      * Creating Basic Java-Servlets Authenticator implement.
@@ -206,7 +210,7 @@ public class ServerProxy implements MethodHandler {
          * @param uri - Request URI.
          * @param exchange - Java-Servlets incoming exchange.
          */
-        private List<Object> createMethodArgumentsList(String uri, HttpExchange exchange)
+        private List<Object> createMethodArgumentsList(HttpExchange exchange, String uri)
         throws Exception {
 
             String requestBodyMessage = readRequestBody(exchange);
@@ -259,6 +263,31 @@ public class ServerProxy implements MethodHandler {
         }
 
         /**
+         * Handling and sending throwing exception as
+         * HTTP response to client.
+         *
+         * @param exchange - Java-Servlets incoming exchange.
+         * @param exception - Throwing exception.
+         */
+        private void sendException(HttpExchange exchange, Exception exception) {
+            try {
+                sendResponse(exchange, 500, exception.getMessage().getBytes());
+            }
+            catch (IOException e) {
+                exception.initCause(e);
+            }
+
+            Throwable lastCause = RestUtilities.getLastCause(exception);
+
+            if (!RestUtilities.handleException(proxyInstance, lastCause, exceptionHandlersMap)) {
+
+                if (RestUtilities.containsOption(options, RestOption.Type.THROW_UNHANDLED_EXCEPTIONS)) {
+                    lastCause.printStackTrace();
+                }
+            }
+        }
+
+        /**
          * Handling of HTTP exchange data.
          *
          * @param exchange - The exchange containing the request from the
@@ -290,26 +319,32 @@ public class ServerProxy implements MethodHandler {
                     sendResponse(exchange, 404, uri.getBytes());
                     return;
                 }
-                long startTime = System.currentTimeMillis();
 
-                Object[] invokeArgs = createMethodArgumentsList(requestContext, exchange).toArray();
+                Runnable task = () -> {
 
-                if (System.currentTimeMillis() - startTime > signature.getTimeout()) {
-                    throw new TimeoutException(declaredMethod.toString());
-                }
+                    try {
+                        long startTime = System.currentTimeMillis();
+                        Object[] invokeArgs = createMethodArgumentsList(exchange, requestContext).toArray();
 
-                sendResponse(exchange, invokeArgs);
-            }
-            catch (Throwable exception) {
-                sendResponse(exchange, 500, exception.getMessage().getBytes());
-                Throwable lastCause = RestUtilities.getLastCause(exception);
+                        if (System.currentTimeMillis() - startTime > signature.getTimeout()) {
+                            throw new TimeoutException(declaredMethod.toString());
+                        }
 
-                if (!RestUtilities.handleException(proxyInstance, lastCause, exceptionHandlersMap)) {
-
-                    if (RestUtilities.hasFlag(options, RestOption.Type.THROW_UNHANDLED_EXCEPTIONS)) {
-                        lastCause.printStackTrace();
+                        sendResponse(exchange, invokeArgs);
                     }
+                    catch (Exception exception) {
+                        sendException(exchange, exception);
+                    }
+                };
+
+                if (RestUtilities.containsOption(options, RestOption.Type.ASYNCHRONOUS)) {
+                    THREADS_POOL.submit(task);
+                } else {
+                    task.run();
                 }
+
+            } catch (Exception exception) {
+                sendException(exchange, exception);
             }
         }
     }
