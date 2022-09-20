@@ -150,9 +150,9 @@ public class RestServerTest {
             throw new IllegalArgumentException(TOKEN_HEADER);
         }
 
-        RestBody message = context.getBody();
+        RestBody body = context.getBody();
 
-        Userdata newUserdata = message.convert(Userdata.class);
+        Userdata newUserdata = body.convert(Userdata.class);
         userdataList.add(newUserdata);
 
         return Responses.ofJSONMessage(Responses.OK, "Successfully added");
@@ -209,7 +209,7 @@ rest.bind(RestServerTest.class, new ArrayList<>());
 RestClientTest restClient = rest.get(RestClientTest.class);
 
 // Add user & print response.
-RestBody adduserBody = RestBody.asJsonObject(new Userdata("itzstonlex", 18, 3)); 
+RestBody adduserBody = RestBody.fromConvertedObject(new Userdata("itzstonlex", 18, 3)); 
 System.out.println("[Test] " + restClient.addUserdata(adduserBody));
 
 // Get response-data at variables.
