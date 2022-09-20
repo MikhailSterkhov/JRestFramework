@@ -15,6 +15,13 @@ import lombok.experimental.NonFinal;
 @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
 public final class RestFrameworkBootstrap {
 
+    /**
+     * Starting automatic packet parsing services for
+     * outgoing initialized Bootstrap.
+     *
+     * @param packageName - Name of project package.
+     * @param classLoader - Outgoing bootstrap class loader.
+     */
     public static RestServicePublicManager runServices(@NonNull String packageName, @NonNull ClassLoader classLoader) {
         RestFrameworkBootstrap restFramework = new RestFrameworkBootstrap(
                 new RestServiceManager(new ProjectScanner(classLoader))
@@ -24,6 +31,12 @@ public final class RestFrameworkBootstrap {
         return restFramework.getPublicManager();
     }
 
+    /**
+     * Starting automatic packet parsing services for
+     * outgoing initialized Bootstrap.
+     *
+     * @param bootstrapClass - Outgoing bootstrap class type.
+     */
     public static RestServicePublicManager runServices(@NonNull Class<?> bootstrapClass) {
         return RestFrameworkBootstrap.runServices(bootstrapClass.getPackage().getName(), bootstrapClass.getClassLoader());
     }

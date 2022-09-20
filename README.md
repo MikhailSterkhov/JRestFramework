@@ -24,16 +24,16 @@ A simple example of REST-client structure:
 ```java
 import com.itzstonlex.restframework.api.*;
 import com.itzstonlex.restframework.api.authentication.RestAuthentication;
+import com.itzstonlex.restframework.api.context.RestBody;
 import com.itzstonlex.restframework.api.method.Get;
 import com.itzstonlex.restframework.api.method.Post;
-import com.itzstonlex.restframework.api.RestBody;
-import com.itzstonlex.restframework.api.response.RestResponse;
+import com.itzstonlex.restframework.api.context.response.RestResponse;
 
 @RestService
 @RestClient(url = "http://localhost:8082/api")
 @RestAuthentication(username = "admin", password = "password")
-@RestFlag(RestFlag.Type.ASYNC_REQUESTS)
-@RestFlag(RestFlag.Type.THROW_UNHANDLED_EXCEPTIONS)
+@RestOption(RestOption.Type.ASYNC_REQUESTS)
+@RestOption(RestOption.Type.THROW_UNHANDLED_EXCEPTIONS)
 public interface RestClientTest {
 
     /**
@@ -65,8 +65,8 @@ public interface RestClientTest {
     RestResponse getUserdataAsResponse(@RestParam("name") String name);
 
     /**
-     * The requestMethod body can be created using the
-     * {@link com.itzstonlex.restframework.api.RestBody}
+     * The request body can be created using the
+     * {@link com.itzstonlex.restframework.api.context.RestBody}
      * factory, as shown in this example
      */
     @Post(context = "/adduser", useSignature = false)
@@ -89,11 +89,12 @@ import com.itzstonlex.restframework.api.*;
 import com.itzstonlex.restframework.api.authentication.RestAuthResult;
 import com.itzstonlex.restframework.api.authentication.RestAuthentication;
 import com.itzstonlex.restframework.api.authentication.RestAuthenticationResult;
+import com.itzstonlex.restframework.api.context.RestBody;
 import com.itzstonlex.restframework.api.method.Get;
 import com.itzstonlex.restframework.api.method.Post;
-import com.itzstonlex.restframework.api.request.RestRequestContext;
-import com.itzstonlex.restframework.api.response.Responses;
-import com.itzstonlex.restframework.api.response.RestResponse;
+import com.itzstonlex.restframework.api.context.request.RestRequestContext;
+import com.itzstonlex.restframework.api.context.response.Responses;
+import com.itzstonlex.restframework.api.context.response.RestResponse;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -101,7 +102,7 @@ import java.util.stream.Collectors;
 @RestService
 @RestServer(host = "localhost", port = 8082, defaultContext = "/api")
 @RestAuthentication(username = "admin", password = "password")
-@RestFlag(RestFlag.Type.THROW_UNHANDLED_EXCEPTIONS)
+@RestOption(RestOption.Type.THROW_UNHANDLED_EXCEPTIONS)
 public class RestServerTest {
 
     private static final int NOT_FOUND_ERR = (Responses.BAD_REQUEST + 4);
@@ -117,12 +118,12 @@ public class RestServerTest {
 
     @Get(context = "/users", timeout = 200)
     public RestResponse onUsersGet() {
-        return Responses.fromJSON(Responses.OK, userdataList);
+        return Responses.ofJSON(Responses.OK, userdataList);
     }
 
     @Get(context = "/users")
     public RestResponse onLimitedUsersGet(@RestParam("limit") long limit) {
-        return Responses.fromJSON(Responses.OK, userdataList.stream().limit(limit).collect(Collectors.toList()));
+        return Responses.ofJSON(Responses.OK, userdataList.stream().limit(limit).collect(Collectors.toList()));
     }
 
     @Get(context = "/user")
@@ -134,10 +135,10 @@ public class RestServerTest {
                 .orElse(null);
 
         if (userdata == null) {
-            return Responses.fromMessage(NOT_FOUND_ERR, "Userdata is not found");
+            return Responses.ofText(NOT_FOUND_ERR, "Userdata is not found");
         }
 
-        return Responses.fromJSON(Responses.OK, userdata);
+        return Responses.ofJSON(Responses.OK, userdata);
     }
 
     @Post(context = "/adduser", timeout = 250)
@@ -150,10 +151,10 @@ public class RestServerTest {
 
         RestBody message = context.getBody();
 
-        Userdata newUserdata = message.getAsJsonObject(Userdata.class);
+        Userdata newUserdata = message.convert(Userdata.class);
         userdataList.add(newUserdata);
 
-        return Responses.fromMessageAsJSON(Responses.OK, "Successfully added");
+        return Responses.ofJSONMessage(Responses.OK, "Successfully added");
     }
 
     @RestExceptionHandler

@@ -2,9 +2,10 @@ package com.itzstonlex.restframework.proxy.type;
 
 import com.itzstonlex.restframework.api.*;
 import com.itzstonlex.restframework.api.authentication.RestAuthentication;
-import com.itzstonlex.restframework.api.request.RestRequest;
-import com.itzstonlex.restframework.api.response.Responses;
-import com.itzstonlex.restframework.api.response.RestResponse;
+import com.itzstonlex.restframework.api.context.RestBody;
+import com.itzstonlex.restframework.api.context.request.RestRequestSignature;
+import com.itzstonlex.restframework.api.context.response.Responses;
+import com.itzstonlex.restframework.api.context.response.RestResponse;
 import com.itzstonlex.restframework.util.RestUtilities;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -13,13 +14,10 @@ import lombok.experimental.FieldDefaults;
 import lombok.experimental.NonFinal;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpHeaders;
-import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.UsernamePasswordCredentials;
-import org.apache.http.client.CredentialsProvider;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.RequestBuilder;
 import org.apache.http.entity.StringEntity;
-import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.message.BasicHeader;
@@ -40,6 +38,15 @@ import java.util.function.Supplier;
 @FieldDefaults(makeFinal = true)
 public class ClientProxy implements InvocationHandler {
 
+    /**
+     * Wrapping the client REST service in Proxy
+     * and initializing the finished instance.
+     *
+     * @param classLoader - REST Server-Service type.
+     * @param providerInterface - Client-Service interface type.
+     *
+     * @return - Proxied server instance.
+     */
     @SuppressWarnings("unchecked")
     public static <T> T wrap(ClassLoader classLoader, Class<T> providerInterface) {
         return (T) Proxy.newProxyInstance(classLoader, new Class[]{providerInterface},
@@ -56,7 +63,7 @@ public class ClientProxy implements InvocationHandler {
 
     private ClientProxy(Class<?> interfaceClass) {
         RestClient restClient = RestUtilities.getClientAnnotation(interfaceClass);
-        RestFlag[] restFlagsArray = RestUtilities.getFlagsAnnotations(interfaceClass);
+        RestOption[] restFlagsArray = RestUtilities.getFlagsAnnotations(interfaceClass);
 
         if (restClient == null) {
             throw new RuntimeException("Annotation @RestClient not found for " + interfaceClass);
@@ -76,11 +83,11 @@ public class ClientProxy implements InvocationHandler {
                 continue;
             }
 
-            RestRequest request = RestUtilities.newRestRequest(method);
+            RestRequestSignature request = RestUtilities.createRequestSignature(method);
             executionsMap.put(method.toString(),
                     new ExecutableMethod(restClient,
 
-                            RestUtilities.getRestFlagsTypes(restFlagsArray),
+                            RestUtilities.getOptionsTypes(restFlagsArray),
                             RestUtilities.getHeaders(method),
 
                             request, method));
@@ -109,36 +116,91 @@ public class ClientProxy implements InvocationHandler {
     @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
     private class ExecutableMethod {
 
-        private RestClient restClient;
+        private RestClient clientAnnotation;
 
-        private RestFlag.Type[] restFlagsArray;
+        private RestOption.Type[] options;
         private Header[] headers;
 
-        private RestRequest request;
+        private RestRequestSignature signature;
 
-        private Method method;
+        private Method declaredMethod;
 
+        /**
+         * Handling incoming exceptions on the client side and using
+         * proxied methods and setting flags on the part
+         * of the interface developer.
+         *
+         * @param proxy - Client-service proxy instance.
+         * @param exception - Throwing exception.
+         */
         private RestResponse finallyException(Object proxy, Exception exception) {
             Throwable lastCause = RestUtilities.getLastCause(exception);
 
             if (!RestUtilities.handleException(proxy, lastCause, exceptionHandlersMap)) {
 
-                if (RestUtilities.hasFlag(restFlagsArray, RestFlag.Type.THROW_UNHANDLED_EXCEPTIONS)) {
+                if (RestUtilities.hasFlag(options, RestOption.Type.THROW_UNHANDLED_EXCEPTIONS)) {
                     lastCause.printStackTrace();
                 }
             }
 
-            return Responses.fromMessage(Responses.INTERNAL_SERVER_ERROR, lastCause.getMessage());
+            return Responses.ofText(Responses.INTERNAL_SERVER_ERROR, lastCause.getMessage());
         }
 
+        /**
+         * Building a simple wrapped response to a
+         * request based on the ratio of the parameters
+         * that come to us.
+         *
+         * @param apacheResponse - Response from Apache HTTP client.
+         * @return - Wrapped response data.
+         */
+        public RestResponse makeResponse(CloseableHttpResponse apacheResponse)
+        throws Exception {
+
+            HttpEntity httpEntity = apacheResponse.getEntity();
+
+            int statusCode = apacheResponse.getStatusLine().getStatusCode();
+            String statusEntity = EntityUtils.toString(httpEntity);
+
+            return Responses.of(statusCode, RestBody.fromString(statusEntity));
+        }
+
+        /**
+         * Building and converting the received response from the server
+         * into the return type required from the declared method.
+         *
+         * @param apacheResponse - Response from Apache HTTP client.
+         * @return - Converted response instance.
+         */
+        public Object makeMethodResponse(CloseableHttpResponse apacheResponse)
+        throws Exception {
+
+            RestResponse response = makeResponse(apacheResponse);
+
+            Class<?> returnType = declaredMethod.getReturnType();
+
+            if (!returnType.isAssignableFrom(RestResponse.class)) {
+                return response.getBody().convert(returnType);
+            }
+
+            return response;
+        }
+
+        /**
+         * Executing a HTTP proxied client request by
+         * interface method signature parameters.
+         *
+         * @param proxy - Client-service proxy instance.
+         * @param args - Values array of URL parameters.
+         */
         public CompletableFuture<Object> execute(Object proxy, Object[] args) {
             Supplier<Object> responseSupplier = () -> {
 
-                String fullLink = restClient.url() + request.getContext();
+                String fullLink = clientAnnotation.url() + signature.getUri();
 
-                if (!RestUtilities.hasFlag(restFlagsArray, RestFlag.Type.DISALLOW_SIGNATURE) && request.isUseSignature()) {
+                if (!RestUtilities.hasFlag(options, RestOption.Type.DISALLOW_SIGNATURE) && signature.isUseSignature()) {
                     try {
-                        fullLink += RestUtilities.makeLinkSignature(method, args);
+                        fullLink += RestUtilities.makeLinkSignature(declaredMethod, args);
                     }
                     catch (UnsupportedEncodingException exception) {
                         return finallyException(proxy, exception);
@@ -146,7 +208,7 @@ public class ClientProxy implements InvocationHandler {
                 }
 
                 try {
-                    RequestBuilder requestBuilder = RequestBuilder.copy(new BasicHttpRequest(request.getMethod(), fullLink));
+                    RequestBuilder requestBuilder = RequestBuilder.copy(new BasicHttpRequest(signature.getMethod(), fullLink));
 
                     if (credentials != null) {
 
@@ -177,7 +239,7 @@ public class ClientProxy implements InvocationHandler {
                         RestBody restBody = ((RestBody) args[0]);
 
                         if (restBody.isNull()) {
-                            throw new NullPointerException(method + " - request message is null");
+                            throw new NullPointerException(declaredMethod + " - request message is null");
                         }
 
                         requestBuilder.setEntity(new StringEntity(restBody.getMessage()));
@@ -192,36 +254,11 @@ public class ClientProxy implements InvocationHandler {
                 }
             };
 
-            if (RestUtilities.hasFlag(restFlagsArray, RestFlag.Type.ASYNC_REQUESTS)) {
+            if (RestUtilities.hasFlag(options, RestOption.Type.ASYNC_REQUESTS)) {
                 return CompletableFuture.supplyAsync(responseSupplier);
             }
 
             return CompletableFuture.completedFuture(responseSupplier.get());
-        }
-
-        public RestResponse makeResponse(CloseableHttpResponse apacheResponse)
-        throws Exception {
-
-            HttpEntity httpEntity = apacheResponse.getEntity();
-
-            int statusCode = apacheResponse.getStatusLine().getStatusCode();
-            String statusEntity = EntityUtils.toString(httpEntity);
-
-            return Responses.fromBody(statusCode, RestBody.asText(statusEntity));
-        }
-
-        public Object makeMethodResponse(CloseableHttpResponse apacheResponse)
-        throws Exception {
-
-            RestResponse response = makeResponse(apacheResponse);
-
-            Class<?> returnType = method.getReturnType();
-
-            if (!returnType.isAssignableFrom(RestResponse.class)) {
-                return response.getBody().getAsJsonObject(returnType);
-            }
-
-            return response;
         }
     }
 

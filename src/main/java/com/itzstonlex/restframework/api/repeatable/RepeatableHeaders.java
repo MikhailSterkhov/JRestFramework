@@ -1,15 +1,15 @@
-package com.itzstonlex.restframework.api.multiple;
+package com.itzstonlex.restframework.api.repeatable;
 
-import com.itzstonlex.restframework.api.RestFlag;
+import com.itzstonlex.restframework.api.Header;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-@Target(ElementType.TYPE)
+@Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
-public @interface MultipleRestFlags {
+public @interface RepeatableHeaders {
 
-    RestFlag[] value();
+    Header[] value();
 }

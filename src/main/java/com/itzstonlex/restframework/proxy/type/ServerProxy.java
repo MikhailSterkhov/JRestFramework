@@ -1,16 +1,16 @@
 package com.itzstonlex.restframework.proxy.type;
 
-import com.itzstonlex.restframework.api.RestBody;
-import com.itzstonlex.restframework.api.RestFlag;
+import com.itzstonlex.restframework.api.context.RestBody;
+import com.itzstonlex.restframework.api.RestOption;
 import com.itzstonlex.restframework.api.RestParam;
 import com.itzstonlex.restframework.api.RestServer;
 import com.itzstonlex.restframework.api.authentication.BasicServletAuthenticator;
 import com.itzstonlex.restframework.api.authentication.RestAuthResult;
 import com.itzstonlex.restframework.api.authentication.RestAuthentication;
 import com.itzstonlex.restframework.api.authentication.RestAuthenticationResult;
-import com.itzstonlex.restframework.api.request.RestRequest;
-import com.itzstonlex.restframework.api.request.RestRequestContext;
-import com.itzstonlex.restframework.api.response.RestResponse;
+import com.itzstonlex.restframework.api.context.request.RestRequestSignature;
+import com.itzstonlex.restframework.api.context.request.RestRequestContext;
+import com.itzstonlex.restframework.api.context.response.RestResponse;
 import com.itzstonlex.restframework.util.RestUtilities;
 import com.sun.net.httpserver.*;
 import javassist.util.proxy.MethodHandler;
@@ -34,13 +34,28 @@ import java.util.concurrent.TimeoutException;
 @FieldDefaults(makeFinal = true)
 public class ServerProxy implements MethodHandler {
 
+    /**
+     * Creating Basic Java-Servlets Authenticator implement.
+     *
+     * @param serverSuperclass - REST Server-Service type.
+     * @return - Basic Authenticator.
+     */
     private static Authenticator createAuthenticator(Class<?> serverSuperclass) {
         return new BasicServletAuthenticator(
                 serverSuperclass.getDeclaredAnnotation(RestAuthentication.class), "RestServerRealm"
         );
     }
 
-    @SuppressWarnings("unchecked")
+    /**
+     * Wrapping the server REST service in Proxy
+     * and initializing the finished instance.
+     *
+     * @param serverSuperclass - REST Server-Service type.
+     * @param initargsTypes - Server type constructor initial arguments types.
+     * @param initargs - Server type constructor initial arguments.
+     *
+     * @return - Proxied server instance.
+     */
     @SneakyThrows
     public static <T> T wrap(Class<?> serverSuperclass, Class<?>[] initargsTypes, Object[] initargs) {
         ProxyFactory proxyFactory = new ProxyFactory();
@@ -50,7 +65,7 @@ public class ServerProxy implements MethodHandler {
         proxyFactory.setSuperclass(serverSuperclass);
 
         ServerProxy serverProxy = new ServerProxy(serverSuperclass);
-        T proxyInstance = (T) proxyFactory.create(initargsTypes, initargs, serverProxy);
+        @SuppressWarnings("unchecked") T proxyInstance = (T) proxyFactory.create(initargsTypes, initargs, serverProxy);
 
         serverProxy.setProxyInstance(proxyInstance);
 
@@ -71,7 +86,7 @@ public class ServerProxy implements MethodHandler {
 
     private ServerProxy(Class<?> serverSuperclass) {
         RestServer restServer = RestUtilities.getServerAnnotation(serverSuperclass);
-        RestFlag[] restFlagsArray = RestUtilities.getFlagsAnnotations(serverSuperclass);
+        RestOption[] restFlagsArray = RestUtilities.getFlagsAnnotations(serverSuperclass);
 
         if (restServer == null) {
             throw new RuntimeException("Annotation @RestServer not found for " + serverSuperclass);
@@ -100,11 +115,11 @@ public class ServerProxy implements MethodHandler {
                     continue;
                 }
 
-                RestRequest request = RestUtilities.newRestRequest(method);
-                String contextName = restServer.defaultContext() + request.getContext();
+                RestRequestSignature signature = RestUtilities.createRequestSignature(method);
+                String uri = restServer.defaultContext() + signature.getUri();
 
-                HttpContext context = httpServer.createContext(contextName);
-                context.setHandler(new ExchangedMethod(RestUtilities.getRestFlagsTypes(restFlagsArray), request, contextName, method));
+                HttpContext context = httpServer.createContext(uri);
+                context.setHandler(new ExchangedMethod(RestUtilities.getOptionsTypes(restFlagsArray), signature, uri, method));
             }
 
             httpServer.bind(new InetSocketAddress(restServer.host(), restServer.port()), 10);
@@ -124,13 +139,20 @@ public class ServerProxy implements MethodHandler {
     @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
     private class ExchangedMethod implements HttpHandler {
 
-        private RestFlag.Type[] restFlagsTypes;
+        private RestOption.Type[] options;
 
-        private RestRequest request;
-        private String restContext;
+        private RestRequestSignature signature;
+        private String uri;
 
         private Method declaredMethod;
 
+        /**
+         * Sending a response by HTTP.
+         *
+         * @param exchange - Java-Servlets incoming exchange.
+         * @param statusCode - Response HTTP code.
+         * @param responseBytes - Response HTTP body as bytes array.
+         */
         private void sendResponse(HttpExchange exchange, int statusCode, byte[] responseBytes)
         throws IOException {
 
@@ -143,6 +165,13 @@ public class ServerProxy implements MethodHandler {
             }
         }
 
+        /**
+         * Sending a response by HTTP by executing a
+         * declared proxy method.
+         *
+         * @param exchange - Java-Servlets incoming exchange.
+         * @param invokeArgs - Declared proxy method signature arguments.
+         */
         private void sendResponse(HttpExchange exchange, Object[] invokeArgs)
         throws Exception {
 
@@ -152,6 +181,11 @@ public class ServerProxy implements MethodHandler {
             sendResponse(exchange, response.getStatusCode(), responseBytes);
         }
 
+        /**
+         * Reading a request body input as String.
+         *
+         * @param exchange - Java-Servlets incoming exchange.
+         */
         @SuppressWarnings("ResultOfMethodCallIgnored")
         private String readRequestBody(HttpExchange exchange)
         throws Exception {
@@ -165,11 +199,18 @@ public class ServerProxy implements MethodHandler {
             }
         }
 
-        private List<Object> createMethodArgumentsList(String requestContextPath, HttpExchange exchange)
+        /**
+         * Creating proxy method signature arguments list
+         * from HTTP exchange request data.
+         *
+         * @param uri - Request URI.
+         * @param exchange - Java-Servlets incoming exchange.
+         */
+        private List<Object> createMethodArgumentsList(String uri, HttpExchange exchange)
         throws Exception {
 
             String requestBodyMessage = readRequestBody(exchange);
-            String linkParameters = requestContextPath.contains("?") ? requestContextPath.substring(requestContextPath.indexOf("?") + 1) : null;
+            String linkParameters = uri.contains("?") ? uri.substring(uri.indexOf("?") + 1) : null;
 
             List<Object> methodArgumentsList = new ArrayList<>();
 
@@ -180,9 +221,9 @@ public class ServerProxy implements MethodHandler {
                 if (parameter.isAnnotationPresent(RestParam.class)) {
 
                     if (parameter.getType().isAssignableFrom(RestRequestContext.class)) {
-                        RestRequestContext requestContext = RestRequestContext.create(exchange.getRequestMethod(), requestContextPath);
+                        RestRequestContext requestContext = RestRequestContext.create(exchange.getRequestMethod(), uri);
 
-                        requestContext.setBody(RestBody.asText(requestBodyMessage));
+                        requestContext.setBody(RestBody.fromString(requestBodyMessage));
 
                         requestContext.getHeaders().putAll(exchange.getRequestHeaders());
                         methodArgumentsList.add(requestContext);
@@ -217,6 +258,12 @@ public class ServerProxy implements MethodHandler {
             return methodArgumentsList;
         }
 
+        /**
+         * Handling of HTTP exchange data.
+         *
+         * @param exchange - The exchange containing the request from the
+         *      client and used to send the response
+         */
         @Override
         public void handle(HttpExchange exchange)
         throws IOException {
@@ -239,15 +286,15 @@ public class ServerProxy implements MethodHandler {
                     }
                 }
 
-                if (!requestContext.split("\\?")[0].endsWith(restContext) || !request.getMethod().equalsIgnoreCase(exchange.getRequestMethod())) {
-                    sendResponse(exchange, 404, restContext.getBytes());
+                if (!requestContext.split("\\?")[0].endsWith(uri) || !signature.getMethod().equalsIgnoreCase(exchange.getRequestMethod())) {
+                    sendResponse(exchange, 404, uri.getBytes());
                     return;
                 }
                 long startTime = System.currentTimeMillis();
 
                 Object[] invokeArgs = createMethodArgumentsList(requestContext, exchange).toArray();
 
-                if (System.currentTimeMillis() - startTime > request.getTimeout()) {
+                if (System.currentTimeMillis() - startTime > signature.getTimeout()) {
                     throw new TimeoutException(declaredMethod.toString());
                 }
 
@@ -259,7 +306,7 @@ public class ServerProxy implements MethodHandler {
 
                 if (!RestUtilities.handleException(proxyInstance, lastCause, exceptionHandlersMap)) {
 
-                    if (RestUtilities.hasFlag(restFlagsTypes, RestFlag.Type.THROW_UNHANDLED_EXCEPTIONS)) {
+                    if (RestUtilities.hasFlag(options, RestOption.Type.THROW_UNHANDLED_EXCEPTIONS)) {
                         lastCause.printStackTrace();
                     }
                 }

@@ -1,6 +1,6 @@
-package com.itzstonlex.restframework.api.response;
+package com.itzstonlex.restframework.api.context.response;
 
-import com.itzstonlex.restframework.api.RestBody;
+import com.itzstonlex.restframework.api.context.RestBody;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.NonFinal;

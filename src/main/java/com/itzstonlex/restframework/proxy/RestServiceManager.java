@@ -20,6 +20,12 @@ public final class RestServiceManager {
     @Getter
     private ProxiedServiceManager proxiedServiceManager = new ProxiedServiceManager();
 
+    /**
+     * Performing lookup and initialization (caching) of services annotated
+     * with {@link com.itzstonlex.restframework.api.RestService} annotation
+     *
+     * @param packageName - Main project package name.
+     */
     public Map<Class<?>, Object> findServices(@NonNull String packageName) {
         Set<Class<?>> servicesSet = projectScanner.scanPackage(packageName);
 

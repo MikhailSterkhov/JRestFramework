@@ -1,4 +1,4 @@
-package com.itzstonlex.restframework.api.request;
+package com.itzstonlex.restframework.api.context.request;
 
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -9,10 +9,10 @@ import lombok.experimental.FieldDefaults;
 @EqualsAndHashCode
 @RequiredArgsConstructor
 @FieldDefaults(makeFinal = true)
-public class RestRequest {
+public class RestRequestSignature {
 
     private String method;
-    private String context;
+    private String uri;
 
     private int timeout;
 

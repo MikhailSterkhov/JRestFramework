@@ -19,6 +19,12 @@ public class ProjectScanner {
     @Getter(AccessLevel.PACKAGE)
     private ClassLoader bootstrapLoader;
 
+    /**
+     * Performing lookup and initialization (caching) of services annotated
+     * with {@link com.itzstonlex.restframework.api.RestService} annotation
+     *
+     * @param packageName - Main project package name.
+     */
     public Set<Class<?>> scanPackage(@NonNull String packageName) {
         Reflections reflections = new Reflections(
                 new ConfigurationBuilder()

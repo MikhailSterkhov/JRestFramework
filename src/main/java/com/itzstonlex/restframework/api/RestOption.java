@@ -1,13 +1,13 @@
 package com.itzstonlex.restframework.api;
 
-import com.itzstonlex.restframework.api.multiple.MultipleRestFlags;
+import com.itzstonlex.restframework.api.repeatable.RepeatableOptions;
 
 import java.lang.annotation.*;
 
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
-@Repeatable(MultipleRestFlags.class)
-public @interface RestFlag {
+@Repeatable(RepeatableOptions.class)
+public @interface RestOption {
 
     Type value();
 

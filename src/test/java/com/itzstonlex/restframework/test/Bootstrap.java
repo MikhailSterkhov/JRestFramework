@@ -2,8 +2,8 @@ package com.itzstonlex.restframework.test;
 
 import com.itzstonlex.restframework.RestFrameworkBootstrap;
 import com.itzstonlex.restframework.RestServicePublicManager;
-import com.itzstonlex.restframework.api.RestBody;
-import com.itzstonlex.restframework.api.response.RestResponse;
+import com.itzstonlex.restframework.api.context.RestBody;
+import com.itzstonlex.restframework.api.context.response.RestResponse;
 
 import java.util.ArrayList;
 
@@ -19,7 +19,7 @@ public final class Bootstrap {
         RestClientTest restClient = rest.get(RestClientTest.class);
 
         // Add user & print response.
-        RestBody adduserBody = RestBody.asJsonObject(new Userdata("itzstonlex", 18, 3));
+        RestBody adduserBody = RestBody.fromConvertedObject(new Userdata("itzstonlex", 18, 3));
         System.out.println("[Test] " + restClient.addUserdata(adduserBody));
 
         // Get response-data at variables.

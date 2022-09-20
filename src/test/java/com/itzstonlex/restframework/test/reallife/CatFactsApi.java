@@ -1,15 +1,15 @@
 package com.itzstonlex.restframework.test.reallife;
 
 import com.itzstonlex.restframework.api.RestClient;
-import com.itzstonlex.restframework.api.RestFlag;
+import com.itzstonlex.restframework.api.RestOption;
 import com.itzstonlex.restframework.api.RestService;
 import com.itzstonlex.restframework.api.method.Get;
-import com.itzstonlex.restframework.api.response.RestResponse;
+import com.itzstonlex.restframework.api.context.response.RestResponse;
 
 @RestService
 @RestClient(url = "https://catfact.ninja")
-@RestFlag(RestFlag.Type.ASYNC_REQUESTS)
-@RestFlag(RestFlag.Type.THROW_UNHANDLED_EXCEPTIONS)
+@RestOption(RestOption.Type.ASYNC_REQUESTS)
+@RestOption(RestOption.Type.THROW_UNHANDLED_EXCEPTIONS)
 public interface CatFactsApi {
 
     @Get(context = "/fact")

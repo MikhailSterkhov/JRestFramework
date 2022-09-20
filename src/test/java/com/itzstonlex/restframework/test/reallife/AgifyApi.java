@@ -1,11 +1,11 @@
 package com.itzstonlex.restframework.test.reallife;
 
 import com.itzstonlex.restframework.api.RestClient;
-import com.itzstonlex.restframework.api.RestFlag;
+import com.itzstonlex.restframework.api.RestOption;
 import com.itzstonlex.restframework.api.RestParam;
 import com.itzstonlex.restframework.api.RestService;
 import com.itzstonlex.restframework.api.method.Get;
-import com.itzstonlex.restframework.api.response.RestResponse;
+import com.itzstonlex.restframework.api.context.response.RestResponse;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -14,8 +14,8 @@ import lombok.experimental.FieldDefaults;
 
 @RestService
 @RestClient(url = "https://api.agify.io")
-@RestFlag(RestFlag.Type.ASYNC_REQUESTS)
-@RestFlag(RestFlag.Type.THROW_UNHANDLED_EXCEPTIONS)
+@RestOption(RestOption.Type.ASYNC_REQUESTS)
+@RestOption(RestOption.Type.THROW_UNHANDLED_EXCEPTIONS)
 public interface AgifyApi {
 
     @Getter

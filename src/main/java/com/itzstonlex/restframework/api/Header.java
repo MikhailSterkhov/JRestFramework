@@ -1,12 +1,12 @@
 package com.itzstonlex.restframework.api;
 
-import com.itzstonlex.restframework.api.multiple.MultipleHeaders;
+import com.itzstonlex.restframework.api.repeatable.RepeatableHeaders;
 
 import java.lang.annotation.*;
 
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
-@Repeatable(MultipleHeaders.class)
+@Repeatable(RepeatableHeaders.class)
 public @interface Header {
 
     Operation operate() default Operation.SET;

@@ -2,10 +2,11 @@ package com.itzstonlex.restframework.util;
 
 import com.google.gson.Gson;
 import com.itzstonlex.restframework.api.*;
+import com.itzstonlex.restframework.api.context.RestBody;
 import com.itzstonlex.restframework.api.method.*;
-import com.itzstonlex.restframework.api.multiple.MultipleHeaders;
-import com.itzstonlex.restframework.api.multiple.MultipleRestFlags;
-import com.itzstonlex.restframework.api.request.RestRequest;
+import com.itzstonlex.restframework.api.repeatable.RepeatableHeaders;
+import com.itzstonlex.restframework.api.repeatable.RepeatableOptions;
+import com.itzstonlex.restframework.api.context.request.RestRequestSignature;
 import com.itzstonlex.restframework.proxy.type.ClientProxy;
 import com.itzstonlex.restframework.proxy.type.ServerProxy;
 import lombok.NonNull;
@@ -27,32 +28,32 @@ public class RestUtilities {
 
     public final Gson GSON = new Gson();
 
-    private final Map<Class<? extends Annotation>, Function<Annotation, RestRequest>> REQUEST_ANNOTATIONS_TYPES
+    private final Map<Class<? extends Annotation>, Function<Annotation, RestRequestSignature>> REQUEST_ANNOTATIONS_TYPES
             = new HashMap<>();
 
     @SuppressWarnings("unchecked")
-    private static <T extends Annotation> void addRequestAnnotationType(Class<T> cls, Function<T, RestRequest> function) {
-        REQUEST_ANNOTATIONS_TYPES.put(cls, (Function<Annotation, RestRequest>) function);
+    private static <T extends Annotation> void addRequestAnnotationType(Class<T> cls, Function<T, RestRequestSignature> function) {
+        REQUEST_ANNOTATIONS_TYPES.put(cls, (Function<Annotation, RestRequestSignature>) function);
     }
 
     static {
-        RestUtilities.addRequestAnnotationType(Delete.class, annotation -> new RestRequest("DELETE", annotation.context(), annotation.timeout(), annotation.useSignature()));
-        RestUtilities.addRequestAnnotationType(Get.class, annotation -> new RestRequest("GET", annotation.context(), annotation.timeout(), annotation.useSignature()));
-        RestUtilities.addRequestAnnotationType(Post.class, annotation -> new RestRequest("POST", annotation.context(), annotation.timeout(), annotation.useSignature()));
-        RestUtilities.addRequestAnnotationType(Put.class, annotation -> new RestRequest("PUT", annotation.context(), annotation.timeout(), annotation.useSignature()));
+        RestUtilities.addRequestAnnotationType(Delete.class, annotation -> new RestRequestSignature("DELETE", annotation.context(), annotation.timeout(), annotation.useSignature()));
+        RestUtilities.addRequestAnnotationType(Get.class, annotation -> new RestRequestSignature("GET", annotation.context(), annotation.timeout(), annotation.useSignature()));
+        RestUtilities.addRequestAnnotationType(Post.class, annotation -> new RestRequestSignature("POST", annotation.context(), annotation.timeout(), annotation.useSignature()));
+        RestUtilities.addRequestAnnotationType(Put.class, annotation -> new RestRequestSignature("PUT", annotation.context(), annotation.timeout(), annotation.useSignature()));
     }
 
     public Set<Class<? extends Annotation>> getRequestAnnotationsTypes() {
         return Collections.unmodifiableSet(REQUEST_ANNOTATIONS_TYPES.keySet());
     }
 
-    public <T extends Annotation> RestRequest newRequestByAnnotationType(@NonNull T annotation) {
+    public <T extends Annotation> RestRequestSignature newRequestByAnnotationType(@NonNull T annotation) {
         return REQUEST_ANNOTATIONS_TYPES.get(annotation.annotationType()).apply(annotation);
     }
 
-    public RestRequest newRequestByAnnotationType(@NonNull RequestMethod requestMethod) {
-        return new RestRequest(requestMethod.method(), requestMethod.context(),
-                requestMethod.timeout(), requestMethod.useSignature());
+    public RestRequestSignature newRequestByAnnotationType(@NonNull Request request) {
+        return new RestRequestSignature(request.method(), request.context(),
+                request.timeout(), request.useSignature());
     }
 
     public <T> T createServerProxy(@NonNull Class<T> cls, Object... initargs) {
@@ -101,8 +102,8 @@ public class RestUtilities {
         return ClientProxy.wrap(classLoader, cls);
     }
 
-    public RestFlag.Type[] getRestFlagsTypes(RestFlag[] restFlagsArray) {
-        return Arrays.stream(restFlagsArray).map(RestFlag::value).toArray(RestFlag.Type[]::new);
+    public RestOption.Type[] getOptionsTypes(RestOption[] restFlagsArray) {
+        return Arrays.stream(restFlagsArray).map(RestOption::value).toArray(RestOption.Type[]::new);
     }
 
     public RestServer getServerAnnotation(Class<?> declaringClass) {
@@ -125,23 +126,23 @@ public class RestUtilities {
         return declaringClass.getDeclaredAnnotation(annotationType);
     }
 
-    public RestFlag[] getFlagsAnnotations(Class<?> declaringClass) {
-        Class<MultipleRestFlags> multiAnnotationType = MultipleRestFlags.class;
-        Class<RestFlag> singleAnnotationType = RestFlag.class;
+    public RestOption[] getFlagsAnnotations(Class<?> declaringClass) {
+        Class<RepeatableOptions> multiAnnotationType = RepeatableOptions.class;
+        Class<RestOption> singleAnnotationType = RestOption.class;
 
         if (!declaringClass.isAnnotationPresent(multiAnnotationType)) {
             if (!declaringClass.isAnnotationPresent(singleAnnotationType)) {
-                return new RestFlag[0];
+                return new RestOption[0];
             }
 
-            return new RestFlag[]{declaringClass.getDeclaredAnnotation(singleAnnotationType)};
+            return new RestOption[]{declaringClass.getDeclaredAnnotation(singleAnnotationType)};
         }
 
         return declaringClass.getDeclaredAnnotation(multiAnnotationType).value();
     }
 
     public Header[] getHeaders(Method method) {
-        Class<MultipleHeaders> annotationType = MultipleHeaders.class;
+        Class<RepeatableHeaders> annotationType = RepeatableHeaders.class;
 
         if (!method.isAnnotationPresent(annotationType)) {
             return new Header[0];
@@ -150,9 +151,9 @@ public class RestUtilities {
         return method.getDeclaredAnnotation(annotationType).value();
     }
 
-    public RestRequest newRestRequest(Method method) {
-        RestRequest request = null;
-        RequestMethod requestMethod = method.getDeclaredAnnotation(RequestMethod.class);
+    public RestRequestSignature createRequestSignature(Method method) {
+        RestRequestSignature request = null;
+        Request requestMethod = method.getDeclaredAnnotation(Request.class);
 
         if (requestMethod == null) {
 
@@ -268,7 +269,7 @@ public class RestUtilities {
         return founded;
     }
 
-    public boolean hasFlag(RestFlag.Type[] restFlagsTypes, RestFlag.Type flag) {
+    public boolean hasFlag(RestOption.Type[] restFlagsTypes, RestOption.Type flag) {
         return Arrays.asList(restFlagsTypes).contains(flag);
     }
 

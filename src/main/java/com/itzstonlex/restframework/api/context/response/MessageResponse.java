@@ -1,6 +1,6 @@
-package com.itzstonlex.restframework.api.response;
+package com.itzstonlex.restframework.api.context.response;
 
-import com.itzstonlex.restframework.api.RestBody;
+import com.itzstonlex.restframework.api.context.RestBody;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -21,6 +21,6 @@ public class MessageResponse extends RestResponse {
     }
 
     MessageResponse(int statusCode, String message) {
-        super(statusCode, Responses.toStatusPhrase(statusCode), RestBody.asText(message));
+        super(statusCode, Responses.toStatusPhrase(statusCode), RestBody.fromString(message));
     }
 }

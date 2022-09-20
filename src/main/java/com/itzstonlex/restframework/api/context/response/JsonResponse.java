@@ -1,4 +1,4 @@
-package com.itzstonlex.restframework.api.response;
+package com.itzstonlex.restframework.api.context.response;
 
 import com.itzstonlex.restframework.util.RestUtilities;
 
