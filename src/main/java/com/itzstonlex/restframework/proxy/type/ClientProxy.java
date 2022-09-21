@@ -223,7 +223,8 @@ public class ClientProxy implements InvocationHandler {
                     }
 
                     for (Header header : headers) {
-                        org.apache.http.Header apacheHeader = new BasicHeader(header.name(), header.value());
+                        org.apache.http.Header apacheHeader = new BasicHeader(header.name(),
+                                RestUtilities.parseSystemProperties(header.value()));
 
                         switch (header.operate()) {
                             case ADD: {
