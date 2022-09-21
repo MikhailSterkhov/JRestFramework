@@ -1,5 +1,6 @@
 package com.itzstonlex.restframework.api.authentication;
 
+import com.itzstonlex.restframework.util.RestUtilities;
 import com.sun.net.httpserver.BasicAuthenticator;
 import lombok.experimental.FieldDefaults;
 
@@ -21,6 +22,7 @@ public class BasicServletAuthenticator extends BasicAuthenticator {
 
     @Override
     public boolean checkCredentials(String username, String password) {
-        return authentication.username().equals(username) && authentication.password().equals(password);
+        return RestUtilities.parseSystemProperties(authentication.username()).equals(username)
+                && RestUtilities.parseSystemProperties(authentication.password()).equals(password);
     }
 }

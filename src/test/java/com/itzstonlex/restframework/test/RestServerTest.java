@@ -18,7 +18,7 @@ import java.util.stream.Collectors;
 
 @RestService
 @RestServer(host = "localhost", port = 8082, defaultContext = "/api")
-@RestAuthentication(username = "admin", password = "password")
+@RestAuthentication(username = "admin", password = "${system.rest.auth.password}")
 @RestOption(RestOption.Type.ASYNCHRONOUS)
 @RestOption(RestOption.Type.THROW_UNHANDLED_EXCEPTIONS)
 @RequiredArgsConstructor
@@ -27,8 +27,7 @@ public class RestServerTest {
 
     private static final int NOT_FOUND_ERR = (Responses.BAD_REQUEST + 4);
 
-    private static final String TOKEN_HEADER = "Auth-Token",
-                                TOKEN = "TestToken123";
+    private static final String TOKEN_HEADER = "Auth-Token";
 
     private List<Userdata> userdataList;
 
@@ -60,7 +59,7 @@ public class RestServerTest {
     public RestResponse onUserAdd(@RestParam RestRequestContext context) {
         String tokenHeader = context.getFirstHeader(TOKEN_HEADER);
 
-        if (tokenHeader == null || !tokenHeader.equals(TOKEN)) {
+        if (tokenHeader == null || !tokenHeader.equals(System.getProperty("rest.auth.token"))) {
             throw new IllegalArgumentException(TOKEN_HEADER);
         }
 

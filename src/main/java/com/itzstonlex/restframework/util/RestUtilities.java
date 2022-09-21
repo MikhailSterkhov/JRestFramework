@@ -273,4 +273,16 @@ public class RestUtilities {
         return founded;
     }
 
+    public String parseSystemProperties(String string) {
+        Properties properties = System.getProperties();
+
+        Set<String> keys = properties.stringPropertyNames();
+
+        for (String key : keys) {
+            string = string.replace(String.format("${%s}", "system." + key), properties.getProperty(key));
+        }
+
+        return string;
+    }
+
 }

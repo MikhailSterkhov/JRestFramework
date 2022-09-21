@@ -78,7 +78,9 @@ public class ClientProxy implements InvocationHandler {
         if (interfaceClass.isAnnotationPresent(RestAuthentication.class)) {
 
             RestAuthentication authentication = interfaceClass.getDeclaredAnnotation(RestAuthentication.class);
-            credentials = new UsernamePasswordCredentials(authentication.username(), authentication.password());
+            credentials = new UsernamePasswordCredentials(
+                    RestUtilities.parseSystemProperties(authentication.username()),
+                    RestUtilities.parseSystemProperties(authentication.password()));
         }
 
         for (Method method : interfaceClass.getDeclaredMethods()) {

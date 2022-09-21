@@ -10,6 +10,9 @@ import java.util.ArrayList;
 public final class Bootstrap {
 
     public static void main(String[] args) {
+        System.setProperty("rest.auth.password", "password");
+        System.setProperty("rest.auth.token", "TestToken123");
+
         RestServicePublicManager rest = RestFrameworkBootstrap.runServices(Bootstrap.class);
 
         // Bind a REST-server

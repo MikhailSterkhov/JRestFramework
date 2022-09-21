@@ -11,7 +11,7 @@ import java.util.List;
 
 @RestService
 @RestClient(url = "http://localhost:8082/api")
-@RestAuthentication(username = "admin", password = "password")
+@RestAuthentication(username = "admin", password = "${system.rest.auth.password}")
 @RestOption(RestOption.Type.ASYNCHRONOUS)
 @RestOption(RestOption.Type.THROW_UNHANDLED_EXCEPTIONS)
 public interface RestClientTest {
@@ -51,6 +51,6 @@ public interface RestClientTest {
      */
     @Post(context = "/adduser", useSignature = false)
     @Header(name = "Content-Type", value = "application/json")
-    @Header(name = "Auth-Token", value = "TestToken123", operate = Header.Operation.ADD)
+    @Header(name = "Auth-Token", value = "${system.rest.auth.token}", operate = Header.Operation.ADD)
     RestResponse addUserdata(@RestParam RestBody body);
 }
