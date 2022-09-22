@@ -24,6 +24,14 @@
         </developer>
     </developers>
 
+    <distributionManagement>
+        <repository>
+            <id>github</id>
+            <name>ItzStonlex</name>
+            <url>https://maven.pkg.github.com/ItzStonlex/JRestFramework</url>
+        </repository>
+    </distributionManagement>
+
     <dependencies>
         <dependency>
             <groupId>org.projectlombok</groupId>
