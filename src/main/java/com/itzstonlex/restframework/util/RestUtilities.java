@@ -1,6 +1,5 @@
 package com.itzstonlex.restframework.util;
 
-import com.google.gson.Gson;
 import com.itzstonlex.restframework.api.*;
 import com.itzstonlex.restframework.api.context.RestBody;
 import com.itzstonlex.restframework.api.method.*;
@@ -12,6 +11,8 @@ import com.itzstonlex.restframework.proxy.type.ServerProxy;
 import lombok.NonNull;
 import lombok.SneakyThrows;
 import lombok.experimental.UtilityClass;
+import net.nodeson.Nodeson;
+import net.nodeson.NodesonParser;
 
 import java.io.UnsupportedEncodingException;
 import java.lang.annotation.Annotation;
@@ -26,7 +27,7 @@ import java.util.function.Function;
 @UtilityClass
 public class RestUtilities {
 
-    public final Gson GSON = new Gson();
+    public final NodesonParser JSON_PARSER = Nodeson.common();
 
     private final Map<Class<? extends Annotation>, Function<Annotation, RestRequestSignature>> REQUEST_ANNOTATIONS_TYPES
             = new HashMap<>();

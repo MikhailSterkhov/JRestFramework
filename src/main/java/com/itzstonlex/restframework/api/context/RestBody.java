@@ -41,7 +41,7 @@ public class RestBody {
      * @return - REST body object.
      */
     public static RestBody fromConvertedObject(Object object) {
-        return fromString(RestUtilities.GSON.toJson(object));
+        return fromString(RestUtilities.JSON_PARSER.parse(object));
     }
 
     private String message;
@@ -52,7 +52,7 @@ public class RestBody {
 
     public <T> T convert(@NonNull Class<T> type) {
         try {
-            return RestUtilities.GSON.fromJson(message, type);
+            return RestUtilities.JSON_PARSER.convert(message, type);
         }
         catch (Exception exception) {
             return null;

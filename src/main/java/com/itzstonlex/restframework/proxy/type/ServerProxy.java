@@ -191,7 +191,7 @@ public class ServerProxy implements MethodHandler {
          * @param exchange - Java-Servlets incoming exchange.
          */
         @SuppressWarnings("ResultOfMethodCallIgnored")
-        private String readRequestBody(HttpExchange exchange)
+        private synchronized String readRequestBody(HttpExchange exchange)
         throws Exception {
 
             try (InputStream requestBody = exchange.getRequestBody()) {
@@ -210,7 +210,7 @@ public class ServerProxy implements MethodHandler {
          * @param uri - Request URI.
          * @param exchange - Java-Servlets incoming exchange.
          */
-        private List<Object> createMethodArgumentsList(HttpExchange exchange, String uri)
+        private synchronized List<Object> createMethodArgumentsList(HttpExchange exchange, String uri)
         throws Exception {
 
             String requestBodyMessage = readRequestBody(exchange);
@@ -249,7 +249,7 @@ public class ServerProxy implements MethodHandler {
                         throw new NullPointerException("Parameter " + parameter + " (" + name + ") is not found in URL: " + exchange.getRequestURI().toURL());
                     }
 
-                    Object value = RestUtilities.GSON.fromJson(linkParameters.substring(prefixIndexBegin, prefixIndexEnd > 0 ? prefixIndexEnd : linkParameters.length()),
+                    Object value = RestUtilities.JSON_PARSER.convert(linkParameters.substring(prefixIndexBegin, prefixIndexEnd > 0 ? prefixIndexEnd : linkParameters.length()),
                             parameter.getType());
 
                     methodArgumentsList.add(value);
@@ -269,7 +269,7 @@ public class ServerProxy implements MethodHandler {
          * @param exchange - Java-Servlets incoming exchange.
          * @param exception - Throwing exception.
          */
-        private void sendException(HttpExchange exchange, Exception exception) {
+        private synchronized void sendException(HttpExchange exchange, Exception exception) {
             try {
                 sendResponse(exchange, 500, exception.getMessage().getBytes());
             }
@@ -294,9 +294,7 @@ public class ServerProxy implements MethodHandler {
          *      client and used to send the response
          */
         @Override
-        public void handle(HttpExchange exchange)
-        throws IOException {
-
+        public void handle(HttpExchange exchange) {
             try {
                 String requestContext = exchange.getRequestURI().toString();
 

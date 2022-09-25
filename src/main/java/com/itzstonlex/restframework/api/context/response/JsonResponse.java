@@ -5,6 +5,6 @@ import com.itzstonlex.restframework.util.RestUtilities;
 public class JsonResponse extends MessageResponse {
 
     JsonResponse(int statusCode, Object obj) {
-        super(statusCode, RestUtilities.GSON.toJson(obj));
+        super(statusCode, RestUtilities.JSON_PARSER.parse(obj));
     }
 }
