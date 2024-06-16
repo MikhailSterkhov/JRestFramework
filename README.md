@@ -1,6 +1,11 @@
 # JRestFramework
 Create a REST project services structure with a JRestFramework
 
+## WARNING
+
+This project is no longer supported!
+A new version is available in a separate repository: [jrest2](https://github.com/MikhailSterkhov/jrest2)
+
 ---
 
 This library provides many tools for configurability 
